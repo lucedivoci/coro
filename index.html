@@ -750,7 +750,35 @@
      INCOLLA QUI L'URL DELLA WEB APP (quello che finisce con /exec)
      ========================================================== */
   const API_URL = "https://script.google.com/macros/s/AKfycby5l58Bwdcw2Ok4OnLovCqds1Iev_5bHCEA3gky6nwTtoNqwk6CvZ72JO7f_ZlZZRbr/exec";
+
+  /* ==========================================================
+     CHIAVE API DI GOOGLE DRIVE — incollala qui fra le virgolette.
+
+     Serve per far arrivare file e registrazioni direttamente dai
+     server di Google al browser, senza passare da nessuna parte.
+     È la differenza fra sentire l'audio partire subito e aspettare.
+
+     Senza chiave il sito funziona lo stesso, ma le registrazioni
+     oltre i 25 MB devono passare dal server ed è più lento.
+
+     Come ottenerla (gratuita, cinque minuti, una volta sola):
+       1. console.cloud.google.com → crea un progetto
+       2. API e servizi → Libreria → cerca "Google Drive API" → Abilita
+       3. API e servizi → Credenziali → Crea credenziali → Chiave API
+       4. Limita la chiave: applicazioni web (referrer HTTP) → il
+          dominio del sito;  restrizioni API → solo Google Drive API
+     Così limitata la chiave può leggere soltanto i file già pubblici,
+     e solo dal tuo sito: non c'è nulla da nascondere.
+     ========================================================== */
+  const DRIVE_API_KEY = "";
   /* ========================================================== */
+
+  /** Indirizzo diretto al contenuto del file, disponibile solo con la chiave. */
+  function driveApiUrl(id) {
+    return (DRIVE_API_KEY && id)
+      ? 'https://www.googleapis.com/drive/v3/files/' + id + '?alt=media&key=' + DRIVE_API_KEY
+      : '';
+  }
 
   const AUDIO_TAGS = ["Tutti", "Messa", "Prove", "Audio_guida"];
   const GIORNI_NOVITA = 14;
@@ -871,6 +899,28 @@
     renderTagFilters();
     applyFilters();
     applyAudioFilters();
+    preparaSpartiti();
+  }
+
+  /* Gli spartiti della scaletta di domenica sono pochi e sempre gli
+     stessi: li porto in memoria appena la pagina è ferma, uno alla
+     volta e in sordina. Quando il corista tocca il titolo, il PDF è
+     già lì e si apre senza attesa.
+     Con la chiave API non serve: PDF.js legge già a pezzi dal CDN. */
+  function preparaSpartiti() {
+    if (DRIVE_API_KEY) return;
+    const ids = appData.setlist.map(s => s.fileId).filter(Boolean);
+    if (!ids.length) return;
+
+    let i = 0;
+    const passo = () => {
+      if (i >= ids.length) return;
+      const id = ids[i++];
+      if (pdfCache.has(id)) { passo(); return; }
+      pdfBytes(id).catch(() => {}).then(() => setTimeout(passo, 400));
+    };
+    const avviaQuandoLibero = window.requestIdleCallback || (f => setTimeout(f, 1500));
+    avviaQuandoLibero(passo);
   }
 
   /* ---------- Avvisi di aggiornamento ---------- */
@@ -1066,7 +1116,6 @@
   let corrente = null;      // la registrazione in ascolto
   let fonti = [];           // indirizzi da provare per la registrazione corrente
   let fonteIdx = 0;
-  let blobUrl = null;
   let sbloccato = false;
   let rateIdx = 0;
   let cercando = false;
@@ -1078,14 +1127,24 @@
     return m + ':' + String(Math.floor(s % 60)).padStart(2, '0');
   }
 
-  /* --- Sorgenti da provare, dalla più diretta alla più tollerante --- */
+  /* --- Sorgenti da provare, dalla più diretta alla più tollerante ---
+     L'API di Drive va per prima perché è l'unica che dichiara il tipo
+     giusto (audio/mpeg e non "octet-stream", che Safari rifiuta) e che
+     accetta le richieste parziali, indispensabili su iPhone.
+     Gli indirizzi di drive.usercontent restano come ripiego: spesso
+     rispondono con una pagina HTML, che il lettore non sa suonare. */
   function fontiPer(item) {
     const l = [];
+    if (item.id) {
+      const api = driveApiUrl(item.id);
+      if (api) l.push(api);
+      l.push('https://drive.usercontent.google.com/download?id=' + item.id + '&export=download&confirm=t');
+    }
     if (item.streamUrl) l.push(item.streamUrl);
     if (item.id) {
       l.push('https://drive.usercontent.google.com/download?id=' + item.id + '&export=download');
-      l.push('https://drive.google.com/uc?export=download&id=' + item.id);
       l.push('https://lh3.googleusercontent.com/d/' + item.id);
+      l.push('https://drive.google.com/uc?export=download&id=' + item.id);
     }
     if (item.downloadUrl) l.push(item.downloadUrl);
     return l.filter((v, i) => v && l.indexOf(v) === i);
@@ -1105,50 +1164,152 @@
     } catch (e) {}
   }
 
-  function pulisciBlob() {
-    if (blobUrl) { URL.revokeObjectURL(blobUrl); blobUrl = null; }
-  }
+  /* Un indirizzo morto a volte non dà errore: resta semplicemente muto.
+     Dopo sette secondi senza un byte utile passo al successivo, invece
+     di lasciare la rotellina che gira all'infinito. */
+  let sorveglia = null;
+  function fermaSorveglianza() { clearTimeout(sorveglia); sorveglia = null; }
 
   function avvia(url) {
+    fermaSorveglianza();
     suono.src = url;
     try { suono.load(); } catch (e) {}
     suono.playbackRate = RATES[rateIdx];
+
+    sorveglia = setTimeout(() => {
+      if (suono.readyState < 2) prossimaFonte();
+    }, 7000);
+
     const p = suono.play();
     if (p && p.catch) p.catch(err => {
       // NotAllowedError = manca il gesto dell'utente: non è colpa del file.
-      if (err && err.name === 'NotAllowedError') { attesa(false); disegna(); return; }
+      if (err && err.name === 'NotAllowedError') { fermaSorveglianza(); attesa(false); disegna(); return; }
       prossimaFonte();
     });
   }
 
   function prossimaFonte() {
+    fermaSorveglianza();
+    // Se a fallire è il file già in memoria, non c'è altro da tentare:
+    // riprovare gli indirizzi di Drive porterebbe solo a un giro infinito.
+    if (suono.src && suono.src.indexOf('blob:') === 0) {
+      if (corrente) arrenditi(corrente, 'registrazione non leggibile');
+      return;
+    }
     fonteIdx++;
     if (fonteIdx < fonti.length) { avvia(fonti[fonteIdx]); return; }
     scaricaInMemoria();
   }
 
-  /* Se nessun indirizzo regge lo streaming, portiamo il file in memoria:
-     un blob locale risponde sempre alle richieste parziali. */
+  /* ==========================================================
+     QUANDO DRIVE NON STREAMMA
+
+     Gli indirizzi diretti di Drive funzionano solo se il file è
+     pubblico e il browser non ha più account Google collegati.
+     Altrimenti Drive risponde con una pagina di accesso al posto
+     dell'audio: l'elemento <audio> la riceve, non riconosce nulla
+     e dichiara il formato non supportato.
+
+     Il ripiego passa dal server, come per gli spartiti: chiedo la
+     registrazione a fette da 3 MB, le ricompongo in memoria e la
+     suono da lì. Un blob locale risponde sempre, anche allo
+     spostamento sulla barra del tempo.
+     ========================================================== */
+  const CHUNK       = 3 * 1024 * 1024;     // deve combaciare col server
+  const AUDIO_CACHE = new Map();           // id -> indirizzo del blob
+  const CACHE_MAX   = 3;                   // tre registrazioni in memoria bastano
+
+  let scaricoToken = 0;
+  // Una volta appurato che gli indirizzi diretti non reggono, smetto di
+  // provarli: in una parrocchia la configurazione di Drive non cambia
+  // a metà pomeriggio, e ogni tentativo a vuoto è attesa inutile.
+  let soloServer = !DRIVE_API_KEY && sessionStorage.getItem('coroSoloServer') === '1';
+
+  function ricordaBlob(id, url) {
+    if (AUDIO_CACHE.size >= CACHE_MAX) {
+      const vecchio = AUDIO_CACHE.keys().next().value;
+      URL.revokeObjectURL(AUDIO_CACHE.get(vecchio));
+      AUDIO_CACHE.delete(vecchio);
+    }
+    AUDIO_CACHE.set(id, url);
+  }
+
+  /* Mostra l'avanzamento al posto del sottotitolo della barra. */
+  function avanzamento(testo) {
+    const el = document.getElementById('miniSub');
+    if (el) el.textContent = testo;
+  }
+
+  async function scaricaDalServer(item) {
+    const token = ++scaricoToken;
+    const pezzi = [];
+    let letti = 0, totale = 0, tipo = 'audio/mpeg';
+
+    avanzamento('Preparo la registrazione…');
+
+    while (totale === 0 || letti < totale) {
+      const res = await api('chunk', { id: item.id, start: letti, len: CHUNK });
+      if (token !== scaricoToken) return null;         // l'utente è passato ad altro
+      if (!res || !res.success) throw new Error((res && res.msg) || 'file non disponibile');
+
+      if (!totale) { totale = res.total; tipo = res.type || tipo; }
+
+      const bin = atob(res.b64);
+      const arr = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+      if (!arr.length) break;
+
+      pezzi.push(arr);
+      letti += arr.length;
+      avanzamento('Scarico… ' + Math.round(letti / totale * 100) + '%');
+    }
+
+    if (token !== scaricoToken) return null;
+    return URL.createObjectURL(new Blob(pezzi, { type: tipo }));
+  }
+
+  /* Il ripiego completo: prima un tentativo diretto (se il file è
+     pubblico è la strada più veloce e permette il vero streaming),
+     poi il server. */
   async function scaricaInMemoria() {
     const item = corrente;
     attesa(true);
-    for (const url of fonti) {
-      try {
-        const r = await fetch(url, { credentials: 'omit', cache: 'default' });
-        if (!r.ok) continue;
-        const b = await r.blob();
-        if (b.size < 2048) continue;
-        if (corrente !== item) return;
-        pulisciBlob();
-        blobUrl = URL.createObjectURL(b);
-        avviaBlob(blobUrl);
-        return;
-      } catch (e) { /* quasi sempre CORS: si passa oltre */ }
+
+    if (!soloServer) {
+      for (const url of fonti) {
+        try {
+          const r = await fetch(url, { credentials: 'omit', cache: 'default' });
+          if (!r.ok) continue;
+          const b = await r.blob();
+          if (b.size < 2048) continue;                  // pagina di errore, non audio
+          if (!corrente || corrente.id !== item.id) return;
+          const u = URL.createObjectURL(b);
+          ricordaBlob(item.id, u);
+          avviaBlob(u);
+          return;
+        } catch (e) { /* quasi sempre CORS: si passa oltre */ }
+      }
     }
-    if (corrente === item) arrenditi(item);
+
+    try {
+      const url = await scaricaDalServer(item);
+      if (!url) return;                                 // richiesta superata da un'altra
+      if (!corrente || corrente.id !== item.id) { URL.revokeObjectURL(url); return; }
+
+      soloServer = true;
+      sessionStorage.setItem('coroSoloServer', '1');
+      ricordaBlob(item.id, url);
+      aggiornaBarra();
+      avviaBlob(url);
+    } catch (err) {
+      if (!corrente || corrente.id !== item.id) return;
+      aggiornaBarra();
+      arrenditi(item, err.message);
+    }
   }
 
   function avviaBlob(url) {
+    fermaSorveglianza();
     fonti = [url]; fonteIdx = 0;      // niente più tentativi a catena
     suono.src = url;
     try { suono.load(); } catch (e) {}
@@ -1157,9 +1318,10 @@
     if (p && p.catch) p.catch(() => { attesa(false); disegna(); });
   }
 
-  function arrenditi(item) {
+  function arrenditi(item, motivo) {
     attesa(false);
-    toast('Questo formato non si apre nel browser: uso il lettore di Drive.');
+    toast(motivo ? 'Non riesco a riprodurla (' + motivo + '): uso il lettore di Drive.'
+                 : 'Questo formato non si apre nel browser: uso il lettore di Drive.');
     apriDrive(item);
     chiudiBarra();
   }
@@ -1168,16 +1330,20 @@
   function suonaItem(item) {
     sblocca();
     if (corrente && corrente.id === item.id) { alterna(); return; }
-    pulisciBlob();
+    scaricoToken++;                    // ferma un eventuale scarico in corso
     corrente = item;
     fonti = fontiPer(item);
     fonteIdx = 0;
     apriBarra();
     attesa(true);
     aggiornaBarra();
-    avvia(fonti[0]);
     disegna();
     mediaSession();
+
+    const pronta = AUDIO_CACHE.get(item.id);
+    if (pronta) { avviaBlob(pronta); return; }   // già in memoria: parte subito
+    if (soloServer) { scaricaInMemoria(); return; }
+    avvia(fonti[0]);
   }
 
   function alterna() {
@@ -1204,10 +1370,11 @@
   }
 
   function chiudiBarra() {
+    fermaSorveglianza();
     try { suono.pause(); } catch (e) {}
     suono.removeAttribute('src');
     try { suono.load(); } catch (e) {}
-    pulisciBlob();
+    scaricoToken++;                    // niente scarichi orfani
     corrente = null;
     document.getElementById('miniPlayer').classList.remove('up');
     document.body.classList.remove('has-player');
@@ -1343,7 +1510,7 @@
   collegaTrack(document.getElementById('miniTrack'), () => !!corrente);
 
   /* --- Ascolto dell'elemento audio --- */
-  suono.addEventListener('loadedmetadata', () => { attesa(false); tempi(); disegna(); });
+  suono.addEventListener('loadedmetadata', () => { fermaSorveglianza(); attesa(false); tempi(); disegna(); });
   suono.addEventListener('durationchange', tempi);
   suono.addEventListener('timeupdate', () => {
     if (cercando) return;
@@ -1352,7 +1519,7 @@
   });
   suono.addEventListener('progress', () => { if (suono.readyState >= 2) attesa(false); });
   suono.addEventListener('waiting', () => attesa(true));
-  suono.addEventListener('playing', () => { attesa(false); disegna(); });
+  suono.addEventListener('playing', () => { fermaSorveglianza(); attesa(false); disegna(); });
   suono.addEventListener('play', () => { attesa(false); disegna(); mediaSession(); });
   suono.addEventListener('pause', () => { attesa(false); disegna(); });
   suono.addEventListener('ended', () => {
@@ -1398,6 +1565,9 @@
   let sondaAttiva = false;
 
   function chiediDurata(item) {
+    // Se gli indirizzi diretti non rispondono, la sonda fallirebbe sempre:
+    // la durata comparirà dopo il primo ascolto, senza sprecare tentativi.
+    if (soloServer) return;
     if (durate.has(item.id) || codaDurate.some(x => x.id === item.id)) return;
     codaDurate.push(item);
     lavoraDurate();
@@ -1652,10 +1822,30 @@
     const arr = new Uint8Array(bin.length);
     for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
 
-    // Tengo in memoria gli ultimi otto spartiti, non di più.
-    if (pdfCache.size >= 8) pdfCache.delete(pdfCache.keys().next().value);
+    // Tengo in memoria gli ultimi spartiti: una scaletta intera ci sta.
+    if (pdfCache.size >= 14) pdfCache.delete(pdfCache.keys().next().value);
     pdfCache.set(fileId, arr);
     return arr;
+  }
+
+  /* Due strade per aprire uno spartito.
+     Con la chiave API, PDF.js parla direttamente col CDN di Google e si
+     scarica solo i pezzi che gli servono: la prima pagina compare quasi
+     subito anche su un PDF pesante.
+     Senza chiave si passa dal server, che manda il file tutto intero. */
+  async function apriDocumento(lib, fileId) {
+    const url = driveApiUrl(fileId);
+    if (url) {
+      try {
+        return await lib.getDocument({ url: url, rangeChunkSize: 131072 }).promise;
+      } catch (e) {
+        // Chiave assente, scaduta o CORS negato: si ripiega sul server.
+      }
+    }
+    const bytes = await pdfBytes(fileId);
+    // slice(): PDF.js cede i byte al proprio thread e li svuota,
+    // quindi gli passo sempre una copia e la cache resta buona.
+    return await lib.getDocument({ data: bytes.slice() }).promise;
   }
 
   async function openPdf(fileId, title, downloadUrl) {
@@ -1672,12 +1862,10 @@
     const token = pdfToken;
 
     try {
-      const [lib, bytes] = await Promise.all([loadPdfJs(), pdfBytes(fileId)]);
+      const lib = await loadPdfJs();
       if (token !== pdfToken) return;
 
-      // slice(): PDF.js cede i byte al proprio thread e li svuota,
-      // quindi gli passo sempre una copia e la cache resta buona.
-      pdfDoc = await lib.getDocument({ data: bytes.slice() }).promise;
+      pdfDoc = await apriDocumento(lib, fileId);
       if (token !== pdfToken) return;
 
       aggiornaZoomBtn();
