@@ -196,7 +196,6 @@
       font-size: 1.4rem; font-weight: 600; line-height: 1.2;
       margin: 5px 0 0;
     }
-    .stop-key { font-size: 0.8rem; color: var(--ink-mute); margin-top: 4px; }
     .stop-actions { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
 
     /* ============================================================
@@ -246,7 +245,6 @@
     }
     .tag-any { color: var(--ink-mute); border-style: dashed; }
     .tag-date { border-color: var(--rule); color: var(--ink-mute); text-transform: none; letter-spacing: 0; font-weight: 500; }
-    .tag-key { text-transform: none; letter-spacing: 0; font-weight: 500; }
 
     /* Segnale: questo canto è già in scaletta */
     .in-setlist {
@@ -471,7 +469,7 @@
     <div class="toolbar">
       <div class="search-wrap">
         <span data-icon="cerca"></span>
-        <input type="text" id="searchInput" class="search-box" placeholder="Cerca per titolo, momento o tonalità">
+        <input type="text" id="searchInput" class="search-box" placeholder="Cerca per titolo o momento">
       </div>
       <div class="filter-tags" id="tagFilters"></div>
     </div>
@@ -682,7 +680,6 @@
         '<div class="stop-body">' +
           '<span class="eyebrow">' + esc(item.momento) + '</span>' +
           '<h3 class="stop-title">' + esc(item.title) + '</h3>' +
-          (item.tonality ? '<div class="stop-key">Tonalità ' + esc(item.tonality) + '</div>' : '') +
           '<div class="stop-actions">' +
             '<button class="btn js-open">' + icon('apri') + 'Apri spartito</button>' +
             '<a href="' + esc(item.downloadUrl) + '" target="_blank" rel="noopener" class="btn btn-primary">' +
@@ -726,9 +723,9 @@
     const container = document.getElementById('songsList');
     container.innerHTML = '';
 
-    // La ricerca guarda titolo, momenti e tonalità insieme
+    // La ricerca guarda titolo e momenti insieme
     const filtered = appData.songs.filter(s => {
-      const testo = (s.title + ' ' + s.tags.join(' ') + ' ' + s.tonality).toLowerCase();
+      const testo = (s.title + ' ' + s.tags.join(' ')).toLowerCase();
       const okQuery = !q || testo.includes(q);
       const okTag = activeTag === 'Tutti' || s.tags.includes(activeTag) || s.tags.includes('Tutti');
       return okQuery && okTag;
@@ -749,9 +746,7 @@
       card.innerHTML =
         (momento ? '<span class="in-setlist">In scaletta · ' + esc(momento) + '</span>' : '') +
         '<h3 class="card-title">' + esc(s.title) + '</h3>' +
-        '<div class="tags">' + momentoTags(s.tags) +
-          (s.tonality ? '<span class="tag tag-key">Tonalità ' + esc(s.tonality) + '</span>' : '') +
-        '</div>' +
+        '<div class="tags">' + momentoTags(s.tags) + '</div>' +
         '<div class="card-actions">' +
           '<button class="btn js-open">' + icon('apri') + 'Apri</button>' +
           '<a href="' + esc(s.downloadUrl) + '" target="_blank" rel="noopener" class="btn btn-primary">' +
@@ -900,12 +895,6 @@
         const righe = doc.splitTextToSize(item.title, W - M * 2 - 32);
         doc.text(righe, M, y + 7.5);
 
-        if (item.tonality) {
-          doc.setFont('times', 'italic'); doc.setFontSize(10.5);
-          doc.setTextColor(120, 116, 108);
-          doc.text('Tonalità ' + item.tonality, W - M, y + 7.5, { align: 'right' });
-        }
-
         y += 7.5 + righe.length * 6.5 + 8;
         doc.setDrawColor(226, 223, 215); doc.setLineWidth(0.2);
         doc.line(M, y - 5, W - M, y - 5);
@@ -935,7 +924,7 @@
     toast('Uso la stampa del browser: scegli "Salva come PDF".');
     const righe = appData.setlist.map(i =>
       '<tr><td class="m">' + esc(i.momento) + '</td><td>' + esc(i.title) +
-      '</td><td class="t">' + esc(i.tonality || '') + '</td></tr>').join('');
+      '</td></tr>').join('');
     const w = window.open('', '_blank');
     if (!w) { toast('Consenti le finestre pop-up per stampare.', 'error'); return; }
     w.document.write('<!doctype html><html lang="it"><head><meta charset="utf-8"><title>' +
@@ -947,7 +936,6 @@
       'td{padding:12px 4px;border-bottom:1px solid #e2dfd7;font-size:15px;font-weight:700}' +
       'td.m{width:140px;font-family:Arial,sans-serif;font-size:9px;letter-spacing:.09em;' +
       'text-transform:uppercase;color:#a5252b}' +
-      'td.t{width:95px;text-align:right;font-weight:400;font-style:italic;color:#78746c;font-size:12px}' +
       '</style></head><body><h1>' + esc(appData.choirName) + '</h1><h2>' +
       esc(appData.liturgyTitle) + '</h2><table>' + righe + '</table></body></html>');
     w.document.close();
