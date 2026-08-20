@@ -261,23 +261,24 @@
     .card-actions .btn { flex: 1; }
 
     /* ============================================================
-       LETTORE AUDIO — costruito in casa.
-       L'anteprima di Drive cambia aspetto e altezza da un telefono
-       all'altro e finisce tagliata: qui invece l'altezza è nostra
-       e resta identica ovunque.
+       LETTORE AUDIO
+       Un solo elemento <audio> per tutta la pagina: le schede sono
+       comandi che si accendono su quello. Così su iPhone non si
+       esauriscono i canali audio, la riproduzione non si interrompe
+       cambiando linguetta o cercando un titolo, e la barra in basso
+       resta sempre a portata di pollice.
        ============================================================ */
     .player {
-      display: flex; flex-direction: column; gap: 8px;
+      display: flex; align-items: center; gap: 12px;
       background: var(--surface-2);
       border: 1px solid var(--rule-soft);
       border-radius: var(--radius-sm);
-      padding: 11px 12px 9px;
+      padding: 9px 12px 9px 10px;
       margin: 2px 0;
     }
-    .player-top { display: flex; align-items: center; gap: 11px; }
     .player-play {
       flex: 0 0 auto;
-      width: 42px; height: 42px;
+      width: 40px; height: 40px;
       display: inline-flex; align-items: center; justify-content: center;
       border: none; border-radius: 50%;
       background: var(--accent); color: #fff;
@@ -286,63 +287,129 @@
     }
     .player-play:active { transform: translateY(1px); }
     .player-play.loading { background: var(--ink-mute); }
-    .player-time {
-      flex: 1; min-width: 0;
-      font-size: 0.84rem; font-weight: 600;
-      font-variant-numeric: tabular-nums;
-      color: var(--ink-soft);
-      white-space: nowrap;
-    }
-    .player-time .sep, .player-time .total { color: var(--ink-mute); font-weight: 500; }
-    .player-rate {
-      flex: 0 0 auto;
-      font-family: inherit; font-size: 0.75rem; font-weight: 700;
-      padding: 6px 10px;
-      border: 1px solid var(--rule); border-radius: 999px;
-      background: var(--surface); color: var(--ink-soft);
-      cursor: pointer;
-      font-variant-numeric: tabular-nums;
-    }
-    .player-rate.on { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+    .player-play.loading .icon { animation: gira 1s linear infinite; }
+    @keyframes gira { to { transform: rotate(360deg); } }
 
-    /* La barra: alta 22px per dare al dito un bersaglio comodo,
-       ma il filo colorato ne occupa solo 5. */
-    .player-seek {
-      -webkit-appearance: none; appearance: none;
-      display: block; width: 100%; height: 22px;
-      margin: 0; padding: 0;
-      background: transparent; cursor: pointer;
+    .player-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 7px; }
+
+    /* Filo di avanzamento: 4px di colore, 16px di bersaglio per il dito. */
+    .track {
+      position: relative;
+      height: 16px; margin: -6px 0;
+      cursor: pointer; touch-action: none;
     }
-    .player-seek::-webkit-slider-runnable-track {
-      height: 5px; border-radius: 999px;
-      background:
-        linear-gradient(var(--accent), var(--accent)) left center / var(--pct, 0%) 100% no-repeat,
-        var(--rule);
+    .track::before {
+      content: ''; position: absolute; left: 0; right: 0; top: 6px;
+      height: 4px; border-radius: 999px; background: var(--rule);
     }
-    .player-seek::-webkit-slider-thumb {
-      -webkit-appearance: none; appearance: none;
-      width: 15px; height: 15px; margin-top: -5px;
+    .track-fill {
+      position: absolute; left: 0; top: 6px;
+      height: 4px; width: 0; border-radius: 999px;
+      background: var(--accent);
+      pointer-events: none;
+    }
+    .track-knob {
+      position: absolute; top: 8px; left: 0;
+      width: 13px; height: 13px; margin: -6.5px 0 0 -6.5px;
       border-radius: 50%;
       background: var(--accent);
       border: 2px solid var(--surface);
-      box-shadow: 0 1px 3px rgba(0,0,0,.22);
+      box-shadow: 0 1px 3px rgba(28,27,25,.28);
+      opacity: 0; transition: opacity .15s;
+      pointer-events: none;
     }
-    .player-seek::-moz-range-track { height: 5px; border-radius: 999px; background: var(--rule); }
-    .player-seek::-moz-range-progress { height: 5px; border-radius: 999px; background: var(--accent); }
-    .player-seek::-moz-range-thumb {
-      width: 15px; height: 15px; border-radius: 50%;
-      background: var(--accent); border: 2px solid var(--surface);
-    }
-    .player-seek:disabled { opacity: .5; cursor: default; }
+    .track.live .track-knob, #miniTrack .track-knob { opacity: 1; }
+    .track[aria-disabled="true"] { cursor: default; }
 
-    /* Ripiego: se il browser non sa leggere il file (per esempio un .ogg
-       su iPhone) torna l'anteprima di Drive, ma con l'altezza giusta. */
-    .player.is-fallback { padding: 0; background: transparent; border: none; }
-    .player-fallback {
-      display: block; width: 100%; height: 120px;
-      border: 1px solid var(--rule-soft);
-      border-radius: var(--radius-sm);
+    .player-meta {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 0.78rem; font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      color: var(--ink-mute);
     }
+    .player-meta .cur { color: var(--ink-soft); }
+    .player-meta .spacer { flex: 1; }
+    .player-state {
+      font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--accent);
+    }
+
+    /* La scheda che sta suonando si distingue senza saltare all'occhio */
+    .card.is-playing { border-color: var(--accent); }
+    .card.is-playing .player { background: var(--accent-soft); border-color: transparent; }
+
+    /* ============================================================
+       BARRA IN BASSO — il comando sempre presente
+       ============================================================ */
+    #miniPlayer {
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 300;
+      background: var(--surface);
+      border-top: 1px solid var(--rule);
+      box-shadow: 0 -6px 24px rgba(28,27,25,.09);
+      padding-bottom: env(safe-area-inset-bottom);
+      transform: translateY(110%);
+      transition: transform .26s ease;
+    }
+    #miniPlayer.up { transform: none; }
+    #miniPlayer[hidden] { display: none; }
+    .mini-inner {
+      max-width: 1180px; margin: 0 auto;
+      padding: 9px 14px 11px;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .mini-row { display: flex; align-items: center; gap: 10px; }
+    .mini-title { flex: 1; min-width: 0; }
+    .mini-title .name {
+      display: block;
+      font-family: 'EB Garamond', Georgia, serif;
+      font-size: 1.06rem; font-weight: 600; line-height: 1.25;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .mini-sub {
+      font-size: 0.7rem; font-weight: 600; letter-spacing: 0.04em;
+      color: var(--ink-mute);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .mini-btn {
+      flex: 0 0 auto;
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 38px; height: 38px;
+      border: 1px solid var(--rule); border-radius: 50%;
+      background: var(--surface); color: var(--ink-soft);
+      cursor: pointer;
+      font-family: inherit; font-size: 0.72rem; font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+    .mini-btn:active { transform: translateY(1px); }
+    .mini-btn.rate { width: auto; padding: 0 12px; border-radius: 999px; }
+    .mini-btn.rate.on { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+    .mini-play {
+      flex: 0 0 auto;
+      width: 46px; height: 46px;
+      display: inline-flex; align-items: center; justify-content: center;
+      border: none; border-radius: 50%;
+      background: var(--accent); color: #fff; cursor: pointer;
+    }
+    .mini-play.loading { background: var(--ink-mute); }
+    .mini-play.loading .icon { animation: gira 1s linear infinite; }
+    .mini-times {
+      display: flex; justify-content: space-between;
+      font-size: 0.72rem; font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      color: var(--ink-mute);
+      margin-top: -2px;
+    }
+
+    /* Quando la barra è alzata il contenuto non le finisce sotto */
+    body.has-player { padding-bottom: calc(132px + env(safe-area-inset-bottom)); }
+    body.has-player #toast { bottom: calc(142px + env(safe-area-inset-bottom)); }
+
+    /* Ultimo ripiego: se nessun formato passa, l'anteprima di Drive
+       si apre a pieno schermo, dove ha lo spazio che le serve. */
+    .player-note {
+      font-size: 0.78rem; color: var(--ink-mute); line-height: 1.4;
+    }
+    .player-note b { color: var(--accent); font-weight: 700; }
 
     .admin-box {
       display: none; gap: 8px;
@@ -456,9 +523,10 @@
       font-size: 0.86rem; font-weight: 500;
       box-shadow: 0 10px 30px rgba(28,27,25,.28);
       z-index: 500; max-width: 90vw; text-align: center; white-space: pre-line;
-      transition: transform .25s ease;
+      opacity: 0; visibility: hidden;
+      transition: transform .25s ease, opacity .25s ease, visibility .25s;
     }
-    #toast.show { transform: translateX(-50%) translateY(0); }
+    #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; visibility: visible; }
     #toast.error { background: var(--accent-deep); color: #fff; }
 
     /* ============================================================
@@ -478,6 +546,17 @@
 
     @media (min-width: 640px) {
       .ghost-btn .label { display: inline; }
+    }
+
+    /* Telefoni stretti: la velocità sta nella scheda, non nella barra */
+    @media (max-width: 359px) {
+      #miniRate { display: none; }
+    }
+
+    @media (min-width: 760px) {
+      .mini-inner { padding: 10px 32px 14px; gap: 9px; }
+      .mini-row { gap: 12px; }
+      .mini-title .name { font-size: 1.15rem; }
     }
 
     @media (min-width: 760px) {
@@ -584,6 +663,32 @@
     </div>
   </div>
 
+  <!-- BARRA DEL LETTORE — compare quando parte una registrazione -->
+  <div id="miniPlayer" hidden aria-label="Lettore">
+    <div class="mini-inner">
+      <div class="track" id="miniTrack" role="slider" tabindex="0"
+           aria-label="Posizione nella registrazione" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <div class="track-fill" id="miniFill"></div>
+        <div class="track-knob" id="miniKnob"></div>
+      </div>
+      <div class="mini-times">
+        <span id="miniCur">0:00</span>
+        <span id="miniTot">–:––</span>
+      </div>
+      <div class="mini-row">
+        <button class="mini-play" id="miniPlayBtn" aria-label="Riproduci"></button>
+        <div class="mini-title">
+          <span class="name" id="miniTitle"></span>
+          <span class="mini-sub" id="miniSub"></span>
+        </div>
+        <button class="mini-btn" id="miniBack" aria-label="Indietro di 15 secondi"></button>
+        <button class="mini-btn" id="miniFwd" aria-label="Avanti di 15 secondi"></button>
+        <button class="mini-btn rate" id="miniRate" aria-label="Velocità di riproduzione">1×</button>
+        <button class="mini-btn" id="miniClose" aria-label="Chiudi il lettore"></button>
+      </div>
+    </div>
+  </div>
+
   <div id="toast" role="status" aria-live="polite"></div>
 
   <script>
@@ -621,7 +726,13 @@
     stella:   '<path d="M12 4.5 13.7 10l5.3 1.8-5.3 1.8L12 19.5l-1.7-5.9L5 11.8 10.3 10z"/>',
     play:     '<path d="M9 6.2 18.2 12 9 17.8z" fill="currentColor"/>',
     pausa:    '<path d="M9.5 6.2v11.6M14.5 6.2v11.6" stroke-width="2.1"/>',
-    attesa:   '<path d="M12 4.5a7.5 7.5 0 1 0 7.5 7.5" opacity=".9"/>'
+    attesa:   '<path d="M12 4.5a7.5 7.5 0 1 0 7.5 7.5" opacity=".9"/>',
+    indietro15: '<path d="M11 5.5A7.4 7.4 0 1 1 4.2 10"/><path d="M4 3.4v4.2h4.2"/>' +
+                '<text x="12" y="15.4" text-anchor="middle" font-size="7.6" font-weight="700" ' +
+                'font-family="Archivo,sans-serif" fill="currentColor" stroke="none">15</text>',
+    avanti15:   '<path d="M13 5.5A7.4 7.4 0 1 0 19.8 10"/><path d="M20 3.4v4.2h-4.2"/>' +
+                '<text x="12" y="15.4" text-anchor="middle" font-size="7.6" font-weight="700" ' +
+                'font-family="Archivo,sans-serif" fill="currentColor" stroke="none">15</text>'
   };
   function icon(name, size) {
     return '<svg class="icon" width="' + (size || 19) + '" height="' + (size || 19) + '" viewBox="0 0 24 24" ' +
@@ -869,11 +980,40 @@
   }
 
   /* ---------- Lettore audio ----------
-     Un solo brano alla volta suona; i metadati si chiedono a Drive
-     solo quando la scheda si avvicina allo schermo. */
+     Un solo elemento <audio> serve tutta la pagina. Le schede sono
+     comandi: accendono quello. Tre conseguenze pratiche.
+     1) Su iPhone Safari sblocca l'audio al primo tocco e da quel
+        momento l'elemento resta sbloccato: possiamo cambiare brano
+        e sorgente senza che il sistema ci fermi.
+     2) La riproduzione non si interrompe più quando cerchi un titolo,
+        cambi filtro o passi alla scaletta.
+     3) Niente venti elementi audio che chiedono i metadati a Drive
+        tutti insieme.
+
+     Sulle sorgenti: l'indirizzo di Drive che usavamo risponde alle
+     richieste parziali in modo incostante, e iOS pretende quelle:
+     se non le ottiene abbandona il file. Per questo qui proviamo
+     più indirizzi in fila, poi il download completo in memoria, e
+     solo alla fine l'anteprima di Drive — a pieno schermo, dove ci sta. */
+
   const RATES = [1, 1.25, 1.5, 0.75];
-  let livePlayers = [];
-  let nowPlaying = null;
+  const SALTO = 15;                      // secondi dei tasti avanti/indietro
+  const SILENZIO = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA';
+
+  const suono = new Audio();
+  suono.preload = 'metadata';
+  suono.playsInline = true;
+  suono.setAttribute('playsinline', '');
+
+  let coda = [];            // le registrazioni attualmente a video, in ordine
+  let corrente = null;      // la registrazione in ascolto
+  let fonti = [];           // indirizzi da provare per la registrazione corrente
+  let fonteIdx = 0;
+  let blobUrl = null;
+  let sbloccato = false;
+  let rateIdx = 0;
+  let cercando = false;
+  const durate = new Map(); // id -> secondi, riempita pian piano
 
   function fmtTime(s) {
     if (!isFinite(s) || s < 0) return '–:––';
@@ -881,142 +1021,392 @@
     return m + ':' + String(Math.floor(s % 60)).padStart(2, '0');
   }
 
-  const metaObserver = ('IntersectionObserver' in window)
-    ? new IntersectionObserver((entries, obs) => {
-        entries.forEach(e => {
-          if (!e.isIntersecting) return;
-          const au = e.target.__audio;
-          if (au && au.preload === 'none') { au.preload = 'metadata'; try { au.load(); } catch (err) {} }
-          obs.unobserve(e.target);
-        });
-      }, { rootMargin: '400px 0px' })
-    : null;
-
-  function stopAllPlayers() {
-    livePlayers.forEach(au => { try { au.pause(); au.removeAttribute('src'); au.load(); } catch (e) {} });
-    livePlayers = [];
-    nowPlaying = null;
+  /* --- Sorgenti da provare, dalla più diretta alla più tollerante --- */
+  function fontiPer(item) {
+    const l = [];
+    if (item.streamUrl) l.push(item.streamUrl);
+    if (item.id) {
+      l.push('https://drive.usercontent.google.com/download?id=' + item.id + '&export=download');
+      l.push('https://drive.google.com/uc?export=download&id=' + item.id);
+      l.push('https://lh3.googleusercontent.com/d/' + item.id);
+    }
+    if (item.downloadUrl) l.push(item.downloadUrl);
+    return l.filter((v, i) => v && l.indexOf(v) === i);
   }
 
+  /* Il primo tocco dell'utente sblocca l'elemento audio: da lì in poi
+     possiamo cambiare sorgente anche dopo un'attesa di rete. */
+  function sblocca() {
+    if (sbloccato) return;
+    sbloccato = true;
+    const src = suono.src;
+    try {
+      suono.src = SILENZIO;
+      const p = suono.play();
+      if (p && p.then) p.then(() => { suono.pause(); if (src) suono.src = src; })
+                       .catch(() => { if (src) suono.src = src; });
+    } catch (e) {}
+  }
+
+  function pulisciBlob() {
+    if (blobUrl) { URL.revokeObjectURL(blobUrl); blobUrl = null; }
+  }
+
+  function avvia(url) {
+    suono.src = url;
+    try { suono.load(); } catch (e) {}
+    suono.playbackRate = RATES[rateIdx];
+    const p = suono.play();
+    if (p && p.catch) p.catch(err => {
+      // NotAllowedError = manca il gesto dell'utente: non è colpa del file.
+      if (err && err.name === 'NotAllowedError') { attesa(false); disegna(); return; }
+      prossimaFonte();
+    });
+  }
+
+  function prossimaFonte() {
+    fonteIdx++;
+    if (fonteIdx < fonti.length) { avvia(fonti[fonteIdx]); return; }
+    scaricaInMemoria();
+  }
+
+  /* Se nessun indirizzo regge lo streaming, portiamo il file in memoria:
+     un blob locale risponde sempre alle richieste parziali. */
+  async function scaricaInMemoria() {
+    const item = corrente;
+    attesa(true);
+    for (const url of fonti) {
+      try {
+        const r = await fetch(url, { credentials: 'omit', cache: 'default' });
+        if (!r.ok) continue;
+        const b = await r.blob();
+        if (b.size < 2048) continue;
+        if (corrente !== item) return;
+        pulisciBlob();
+        blobUrl = URL.createObjectURL(b);
+        avviaBlob(blobUrl);
+        return;
+      } catch (e) { /* quasi sempre CORS: si passa oltre */ }
+    }
+    if (corrente === item) arrenditi(item);
+  }
+
+  function avviaBlob(url) {
+    fonti = [url]; fonteIdx = 0;      // niente più tentativi a catena
+    suono.src = url;
+    try { suono.load(); } catch (e) {}
+    suono.playbackRate = RATES[rateIdx];
+    const p = suono.play();
+    if (p && p.catch) p.catch(() => { attesa(false); disegna(); });
+  }
+
+  function arrenditi(item) {
+    attesa(false);
+    toast('Questo formato non si apre nel browser: uso il lettore di Drive.');
+    apriDrive(item);
+    chiudiBarra();
+  }
+
+  /* --- Comandi --- */
+  function suonaItem(item) {
+    sblocca();
+    if (corrente && corrente.id === item.id) { alterna(); return; }
+    pulisciBlob();
+    corrente = item;
+    fonti = fontiPer(item);
+    fonteIdx = 0;
+    apriBarra();
+    attesa(true);
+    aggiornaBarra();
+    avvia(fonti[0]);
+    disegna();
+    mediaSession();
+  }
+
+  function alterna() {
+    if (!corrente) return;
+    sblocca();
+    if (suono.paused) {
+      const p = suono.play();
+      if (p && p.catch) p.catch(() => prossimaFonte());
+    } else {
+      suono.pause();
+    }
+  }
+
+  function salta(delta) {
+    if (!isFinite(suono.duration)) return;
+    suono.currentTime = Math.max(0, Math.min(suono.duration - 0.3, suono.currentTime + delta));
+  }
+
+  function scorri(passo) {
+    if (!corrente || !coda.length) return;
+    const i = coda.findIndex(a => a.id === corrente.id);
+    const next = coda[(i + passo + coda.length) % coda.length];
+    if (next) suonaItem(next);
+  }
+
+  function chiudiBarra() {
+    try { suono.pause(); } catch (e) {}
+    suono.removeAttribute('src');
+    try { suono.load(); } catch (e) {}
+    pulisciBlob();
+    corrente = null;
+    document.getElementById('miniPlayer').classList.remove('up');
+    document.body.classList.remove('has-player');
+    setTimeout(() => { if (!corrente) document.getElementById('miniPlayer').hidden = true; }, 280);
+    disegna();
+  }
+
+  function apriBarra() {
+    const bar = document.getElementById('miniPlayer');
+    bar.hidden = false;
+    document.body.classList.add('has-player');
+    requestAnimationFrame(() => bar.classList.add('up'));
+  }
+
+  /* --- Disegno --- */
+  function attesa(on) {
+    document.getElementById('miniPlayBtn').classList.toggle('loading', !!on);
+    document.querySelectorAll('.card.is-playing .player-play')
+      .forEach(b => b.classList.toggle('loading', !!on));
+    if (on) {
+      document.getElementById('miniPlayBtn').innerHTML = icon('attesa', 24);
+      document.querySelectorAll('.card.is-playing .player-play')
+        .forEach(b => b.innerHTML = icon('attesa', 21));
+    }
+  }
+
+  function simbolo() { return suono.paused ? 'play' : 'pausa'; }
+
+  function disegna() {
+    const btn = document.getElementById('miniPlayBtn');
+    if (!btn.classList.contains('loading')) {
+      btn.innerHTML = icon(simbolo(), 24);
+      btn.setAttribute('aria-label', suono.paused ? 'Riproduci' : 'Metti in pausa');
+    }
+    document.querySelectorAll('#audioList .card').forEach(card => {
+      const attiva = corrente && card.dataset.id === corrente.id;
+      card.classList.toggle('is-playing', !!attiva);
+      const b = card.querySelector('.player-play');
+      if (!b) return;
+      if (attiva && b.classList.contains('loading')) return;
+      b.classList.remove('loading');
+      b.innerHTML = icon(attiva ? simbolo() : 'play', 21);
+      b.setAttribute('aria-label', attiva && !suono.paused ? 'Metti in pausa' : 'Riproduci');
+      const st = card.querySelector('.player-state');
+      if (st) st.textContent = attiva ? (suono.paused ? 'In pausa' : 'In ascolto') : '';
+      const tr = card.querySelector('.track');
+      if (tr) tr.classList.toggle('live', !!attiva);
+    });
+  }
+
+  function aggiornaBarra() {
+    if (!corrente) return;
+    document.getElementById('miniTitle').textContent = corrente.title;
+    const parti = [corrente.tags.join(', ') || 'Audio'];
+    if (corrente.recordDate) parti.push(corrente.recordDate);
+    document.getElementById('miniSub').textContent = parti.join(' · ');
+  }
+
+  function posiziona(frazione) {
+    const f = Math.max(0, Math.min(1, frazione || 0));
+    const pct = (f * 100) + '%';
+    const fill = document.getElementById('miniFill');
+    const knob = document.getElementById('miniKnob');
+    fill.style.width = pct;
+    knob.style.left = pct;
+    document.getElementById('miniTrack').setAttribute('aria-valuenow', Math.round(f * 100));
+    if (corrente) {
+      const card = document.querySelector('#audioList .card[data-id="' + cssId(corrente.id) + '"]');
+      if (card) {
+        const cf = card.querySelector('.track-fill');
+        const ck = card.querySelector('.track-knob');
+        if (cf) cf.style.width = pct;
+        if (ck) ck.style.left = pct;
+      }
+    }
+  }
+
+  function cssId(id) { return String(id).replace(/"/g, '\\"'); }
+
+  function tempi() {
+    const d = isFinite(suono.duration) ? suono.duration : NaN;
+    document.getElementById('miniCur').textContent = fmtTime(suono.currentTime);
+    document.getElementById('miniTot').textContent = fmtTime(d);
+    if (corrente) {
+      if (isFinite(d)) durate.set(corrente.id, d);
+      const card = document.querySelector('#audioList .card[data-id="' + cssId(corrente.id) + '"]');
+      if (card) {
+        const c = card.querySelector('.cur'), t = card.querySelector('.tot');
+        if (c) c.textContent = fmtTime(suono.currentTime);
+        if (t) t.textContent = fmtTime(d);
+      }
+    }
+  }
+
+  /* --- Trascinamento della barra: funziona a dito e a mouse --- */
+  function collegaTrack(el, attivo) {
+    let trascino = false;
+    function frazione(e) {
+      const r = el.getBoundingClientRect();
+      return r.width ? (e.clientX - r.left) / r.width : 0;
+    }
+    el.addEventListener('pointerdown', e => {
+      if (!attivo()) return;
+      if (!isFinite(suono.duration)) return;
+      trascino = true; cercando = true;
+      el.setPointerCapture(e.pointerId);
+      const f = frazione(e);
+      posiziona(f);
+      document.getElementById('miniCur').textContent = fmtTime(f * suono.duration);
+      e.preventDefault();
+    });
+    el.addEventListener('pointermove', e => {
+      if (!trascino) return;
+      const f = frazione(e);
+      posiziona(f);
+      document.getElementById('miniCur').textContent = fmtTime(f * suono.duration);
+    });
+    const chiudi = e => {
+      if (!trascino) return;
+      trascino = false; cercando = false;
+      const f = frazione(e);
+      if (isFinite(suono.duration)) suono.currentTime = f * suono.duration;
+    };
+    el.addEventListener('pointerup', chiudi);
+    el.addEventListener('pointercancel', () => { trascino = false; cercando = false; });
+    el.addEventListener('keydown', e => {
+      if (!attivo() || !isFinite(suono.duration)) return;
+      if (e.key === 'ArrowRight') { salta(5); e.preventDefault(); }
+      if (e.key === 'ArrowLeft')  { salta(-5); e.preventDefault(); }
+    });
+  }
+
+  collegaTrack(document.getElementById('miniTrack'), () => !!corrente);
+
+  /* --- Ascolto dell'elemento audio --- */
+  suono.addEventListener('loadedmetadata', () => { attesa(false); tempi(); disegna(); });
+  suono.addEventListener('durationchange', tempi);
+  suono.addEventListener('timeupdate', () => {
+    if (cercando) return;
+    tempi();
+    if (isFinite(suono.duration) && suono.duration > 0) posiziona(suono.currentTime / suono.duration);
+  });
+  suono.addEventListener('progress', () => { if (suono.readyState >= 2) attesa(false); });
+  suono.addEventListener('waiting', () => attesa(true));
+  suono.addEventListener('playing', () => { attesa(false); disegna(); });
+  suono.addEventListener('play', () => { attesa(false); disegna(); mediaSession(); });
+  suono.addEventListener('pause', () => { attesa(false); disegna(); });
+  suono.addEventListener('ended', () => {
+    posiziona(0);
+    const i = coda.findIndex(a => corrente && a.id === corrente.id);
+    if (i > -1 && i < coda.length - 1) suonaItem(coda[i + 1]);   // avanti da solo
+    else disegna();
+  });
+  suono.addEventListener('error', () => {
+    if (!corrente) return;
+    if (suono.src && suono.src.indexOf('data:audio') === 0) return;   // il silenzio di sblocco
+    prossimaFonte();
+  });
+
+  /* --- Comandi del telefono: schermata di blocco, cuffie, auto --- */
+  function mediaSession() {
+    if (!('mediaSession' in navigator) || !corrente) return;
+    try {
+      const art = [];
+      if (appData.logoUrl) art.push({ src: appData.logoUrl, sizes: '512x512' });
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: corrente.title,
+        artist: appData.choirName || 'Coro',
+        album: corrente.recordDate || '',
+        artwork: art
+      });
+      const set = (a, f) => { try { navigator.mediaSession.setActionHandler(a, f); } catch (e) {} };
+      set('play', () => alterna());
+      set('pause', () => alterna());
+      set('previoustrack', () => scorri(-1));
+      set('nexttrack', () => scorri(1));
+      set('seekbackward', () => salta(-SALTO));
+      set('seekforward', () => salta(SALTO));
+      set('seekto', d => { if (d && d.seekTime != null) suono.currentTime = d.seekTime; });
+    } catch (e) {}
+  }
+
+  /* --- Durate mostrate prima dell'ascolto ---
+     Le chiediamo una alla volta e solo per le schede che stanno per
+     entrare nello schermo. Se Drive non risponde, la scheda resta
+     senza durata: nessun errore, nessuna cascata di tentativi. */
+  const codaDurate = [];
+  let sondaAttiva = false;
+
+  function chiediDurata(item) {
+    if (durate.has(item.id) || codaDurate.some(x => x.id === item.id)) return;
+    codaDurate.push(item);
+    lavoraDurate();
+  }
+  function lavoraDurate() {
+    if (sondaAttiva || !codaDurate.length) return;
+    const item = codaDurate.shift();
+    sondaAttiva = true;
+    const sonda = new Audio();
+    sonda.preload = 'metadata';
+    let chiuso = false;
+    const fine = () => {
+      if (chiuso) return;
+      chiuso = true;
+      clearTimeout(timer);
+      try { sonda.removeAttribute('src'); sonda.load(); } catch (e) {}
+      sondaAttiva = false;
+      setTimeout(lavoraDurate, 60);
+    };
+    const timer = setTimeout(fine, 9000);
+    sonda.addEventListener('loadedmetadata', () => {
+      if (isFinite(sonda.duration) && sonda.duration > 0) {
+        durate.set(item.id, sonda.duration);
+        document.querySelectorAll('#audioList .card[data-id="' + cssId(item.id) + '"] .tot')
+          .forEach(el => { if (!corrente || corrente.id !== item.id) el.textContent = fmtTime(sonda.duration); });
+      }
+      fine();
+    });
+    sonda.addEventListener('error', fine);
+    sonda.src = fontiPer(item)[0];
+  }
+
+  const occhio = ('IntersectionObserver' in window)
+    ? new IntersectionObserver((voci, obs) => {
+        voci.forEach(v => {
+          if (!v.isIntersecting) return;
+          obs.unobserve(v.target);
+          if (v.target.__item) chiediDurata(v.target.__item);
+        });
+      }, { rootMargin: '300px 0px' })
+    : null;
+
+  /* --- La scheda --- */
   function buildPlayer(item) {
     const wrap = document.createElement('div');
     wrap.className = 'player';
+    const nota = durate.has(item.id) ? fmtTime(durate.get(item.id)) : '–:––';
     wrap.innerHTML =
-      '<div class="player-top">' +
-        '<button class="player-play" type="button" aria-label="Riproduci">' + icon('play', 22) + '</button>' +
-        '<div class="player-time">' +
-          '<span class="cur">0:00</span> <span class="sep">/</span> <span class="total">–:––</span>' +
+      '<button class="player-play" type="button" aria-label="Riproduci">' + icon('play', 21) + '</button>' +
+      '<div class="player-body">' +
+        '<div class="track" aria-hidden="true"><div class="track-fill"></div><div class="track-knob"></div></div>' +
+        '<div class="player-meta">' +
+          '<span class="cur">0:00</span><span>/</span><span class="tot">' + nota + '</span>' +
+          '<span class="spacer"></span>' +
+          '<span class="player-state"></span>' +
         '</div>' +
-        '<button class="player-rate" type="button" aria-label="Velocità di riproduzione">1×</button>' +
-      '</div>' +
-      '<input class="player-seek" type="range" min="0" max="1000" step="1" value="0" disabled ' +
-        'aria-label="Posizione nella registrazione">';
+      '</div>';
 
-    const btnPlay = wrap.querySelector('.player-play');
-    const btnRate = wrap.querySelector('.player-rate');
-    const seek    = wrap.querySelector('.player-seek');
-    const elCur   = wrap.querySelector('.cur');
-    const elTot   = wrap.querySelector('.total');
-
-    const src = item.streamUrl ||
-      'https://drive.usercontent.google.com/download?id=' + item.id + '&export=download';
-
-    const audio = new Audio();
-    audio.preload = 'none';
-    audio.src = src;
-    wrap.__audio = audio;
-    livePlayers.push(audio);
-    if (metaObserver) metaObserver.observe(wrap); else { audio.preload = 'metadata'; }
-
-    let dragging = false;
-    let rateIdx = 0;
-
-    function setBar(fraction) {
-      const v = Math.max(0, Math.min(1, fraction || 0));
-      seek.value = Math.round(v * 1000);
-      seek.style.setProperty('--pct', (v * 100) + '%');
-    }
-    function setIcon(name) {
-      btnPlay.innerHTML = icon(name, 22);
-      btnPlay.setAttribute('aria-label', name === 'pausa' ? 'Metti in pausa' : 'Riproduci');
-    }
-
-    /* Se il browser non digerisce il formato, non lasciamo la scheda muta:
-       rimettiamo l'anteprima di Drive, che qualsiasi cosa la legge. */
-    let fallenBack = false;
-    function fallback() {
-      if (fallenBack) return;
-      fallenBack = true;
-      try { audio.pause(); } catch (e) {}
-      wrap.classList.add('is-fallback');
-      wrap.innerHTML =
-        '<iframe class="player-fallback" loading="lazy" allow="autoplay" ' +
-          'title="Registrazione ' + esc(item.title) + '" ' +
-          'src="https://drive.google.com/file/d/' + esc(item.id) + '/preview"></iframe>';
-    }
-
-    audio.addEventListener('loadedmetadata', () => {
-      if (isFinite(audio.duration)) { elTot.textContent = fmtTime(audio.duration); seek.disabled = false; }
-    });
-    audio.addEventListener('durationchange', () => {
-      if (isFinite(audio.duration)) { elTot.textContent = fmtTime(audio.duration); seek.disabled = false; }
-    });
-    audio.addEventListener('timeupdate', () => {
-      if (dragging) return;
-      elCur.textContent = fmtTime(audio.currentTime);
-      if (isFinite(audio.duration) && audio.duration > 0) setBar(audio.currentTime / audio.duration);
-    });
-    audio.addEventListener('waiting', () => btnPlay.classList.add('loading'));
-    audio.addEventListener('playing', () => btnPlay.classList.remove('loading'));
-    audio.addEventListener('play', () => {
-      if (nowPlaying && nowPlaying !== audio) { try { nowPlaying.pause(); } catch (e) {} }
-      nowPlaying = audio;
-      setIcon('pausa');
-    });
-    audio.addEventListener('pause', () => { btnPlay.classList.remove('loading'); setIcon('play'); });
-    audio.addEventListener('ended', () => { setIcon('play'); setBar(0); elCur.textContent = '0:00'; });
-    audio.addEventListener('error', fallback);
-
-    btnPlay.addEventListener('click', () => {
-      if (audio.paused) {
-        btnPlay.classList.add('loading');
-        const p = audio.play();
-        if (p && p.catch) p.catch(() => { btnPlay.classList.remove('loading'); fallback(); });
-      } else {
-        audio.pause();
-      }
-    });
-
-    btnRate.addEventListener('click', () => {
-      rateIdx = (rateIdx + 1) % RATES.length;
-      const r = RATES[rateIdx];
-      audio.playbackRate = r;
-      btnRate.textContent = String(r).replace('.', ',') + '×';
-      btnRate.classList.toggle('on', r !== 1);
-    });
-
-    seek.addEventListener('input', () => {
-      dragging = true;
-      const v = seek.value / 1000;
-      seek.style.setProperty('--pct', (v * 100) + '%');
-      if (isFinite(audio.duration)) elCur.textContent = fmtTime(v * audio.duration);
-    });
-    const commit = () => {
-      if (!dragging) return;
-      dragging = false;
-      if (isFinite(audio.duration)) audio.currentTime = (seek.value / 1000) * audio.duration;
-    };
-    seek.addEventListener('change', commit);
-    seek.addEventListener('pointerup', commit);
-
-    setBar(0);
+    wrap.querySelector('.player-play').addEventListener('click', () => suonaItem(item));
+    collegaTrack(wrap.querySelector('.track'), () => !!corrente && corrente.id === item.id);
     return wrap;
   }
 
   function applyAudioFilters() {
     const q = document.getElementById('searchAudioInput').value.toLowerCase().trim();
     const container = document.getElementById('audioList');
-    stopAllPlayers();
     container.innerHTML = '';
 
     const filtered = appData.audios.filter(a => {
@@ -1026,6 +1416,8 @@
       return okQuery && okTag;
     });
 
+    coda = filtered;   // i tasti avanti/indietro seguono ciò che vedi
+
     if (!filtered.length) {
       container.innerHTML = '<div class="empty-state">Nessuna registrazione trovata.</div>';
       return;
@@ -1034,6 +1426,8 @@
     filtered.forEach(a => {
       const card = document.createElement('article');
       card.className = 'card';
+      card.dataset.id = a.id;
+      card.__item = a;
       card.innerHTML =
         '<h3 class="card-title">' + esc(a.title) + '</h3>' +
         '<div class="tags">' +
@@ -1046,7 +1440,56 @@
         '</div>';
       card.insertBefore(buildPlayer(a), card.querySelector('.card-actions'));
       container.appendChild(card);
+      if (occhio) occhio.observe(card); else chiediDurata(a);
     });
+
+    disegna();
+    if (corrente && isFinite(suono.duration) && suono.duration > 0) {
+      posiziona(suono.currentTime / suono.duration);
+      tempi();
+    }
+  }
+
+  /* --- I tasti della barra --- */
+  document.getElementById('miniPlayBtn').addEventListener('click', alterna);
+  document.getElementById('miniBack').addEventListener('click', () => salta(-SALTO));
+  document.getElementById('miniFwd').addEventListener('click', () => salta(SALTO));
+  document.getElementById('miniClose').addEventListener('click', chiudiBarra);
+  document.getElementById('miniRate').addEventListener('click', () => {
+    rateIdx = (rateIdx + 1) % RATES.length;
+    const r = RATES[rateIdx];
+    suono.playbackRate = r;
+    const b = document.getElementById('miniRate');
+    b.textContent = String(r).replace('.', ',') + '×';
+    b.classList.toggle('on', r !== 1);
+  });
+  document.getElementById('miniBack').innerHTML = icon('indietro15', 20);
+  document.getElementById('miniFwd').innerHTML = icon('avanti15', 20);
+  document.getElementById('miniClose').innerHTML = icon('chiudi', 18);
+  document.getElementById('miniPlayBtn').innerHTML = icon('play', 24);
+
+  /* Barra spaziatrice: mette in pausa, purché non si stia scrivendo */
+  document.addEventListener('keydown', e => {
+    if (e.code !== 'Space' || !corrente) return;
+    const t = e.target.tagName;
+    if (t === 'INPUT' || t === 'TEXTAREA' || t === 'SELECT') return;
+    e.preventDefault();
+    alterna();
+  });
+
+  /* ---------- Ripiego: l'anteprima di Drive a pieno schermo ----------
+     Serve solo per i formati che il browser non sa aprire (per esempio
+     un .ogg su iPhone). Riuso la finestra dello spartito: lì l'altezza
+     è quella dello schermo, quindi il lettore di Drive non finisce
+     più tagliato a metà come nel riquadro dentro la scheda. */
+  function apriDrive(item) {
+    if (!item || !item.id) return;
+    document.getElementById('pdfTitle').textContent = item.title;
+    document.getElementById('pdfDownload').href = item.downloadUrl || '#';
+    document.getElementById('pdfFrame').src =
+      'https://drive.google.com/file/d/' + item.id + '/preview';
+    document.getElementById('pdfViewer').hidden = false;
+    document.body.classList.add('viewer-open');
   }
 
   /* ---------- Lettore dello spartito ---------- */
