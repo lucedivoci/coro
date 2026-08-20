@@ -66,6 +66,9 @@
     .header-bar { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; background: var(--primary); color: #fff; padding: 16px; border-radius: var(--radius-lg); box-shadow: 0 8px 16px rgba(30, 64, 175, 0.15); }
     .liturgy-title { font-weight: 700; font-size: 1.1rem; }
     .header-bar .btn-edit-title { background: rgba(255,255,255,0.2); color: #fff; padding: 6px 12px; border-radius: 8px; border: none; font-size: 0.8rem; align-self: flex-start; cursor: pointer; font-weight: 600; }
+    .btn-pdf { background: #fff; color: var(--primary); border: none; border-radius: 10px; padding: 12px 18px; font-size: 0.9rem; font-weight: 700; cursor: pointer; align-self: flex-start; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
+    .btn-pdf[hidden] { display: none; }
+    .btn-pdf:disabled { opacity: 0.65; cursor: default; }
 
     /* --- CARDS LAYOUT --- */
     .card { background: var(--card); border-radius: var(--radius-lg); padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); border: 1px solid rgba(0,0,0,0.03); display: flex; flex-direction: column; gap: 12px; }
@@ -122,6 +125,79 @@
     #pdfFrame { flex: 1; width: 100%; border: none; background: #334155; }
     body.viewer-open { overflow: hidden; }
 
+    /* ============================================================
+       ADATTAMENTO A SCHERMI GRANDI
+       Il telefono resta com'era; da 760px in su il layout si apre.
+       ============================================================ */
+
+    /* Le liste diventano griglie: una colonna sul telefono, più colonne
+       quando c'è spazio. Le schede si allineano in altezza e i pulsanti
+       restano ancorati in basso. */
+    #songsList, #audioList, #setlistBody {
+      display: grid;
+      gap: 16px;
+      grid-template-columns: 1fr;
+      align-items: start;
+    }
+    #songsList .card, #audioList .card, #setlistBody .card { margin-bottom: 0; height: 100%; }
+    #songsList .card-actions, #audioList .card-actions, #setlistBody .card-actions { margin-top: auto; }
+    .empty-state { grid-column: 1 / -1; }
+
+    .header-inner { display: flex; flex-direction: column; align-items: center; gap: 16px; width: 100%; }
+    .toolbar { display: flex; flex-direction: column; }
+    .pdf-shell { display: flex; flex-direction: column; height: 100%; }
+
+    /* Effetti riservati a chi usa un mouse: sul touch non servono. */
+    @media (hover: hover) {
+      .card { transition: transform .18s ease, box-shadow .18s ease; }
+      .card:hover { transform: translateY(-2px); box-shadow: 0 10px 26px rgba(15,23,42,.09); }
+      .btn-view:hover { background: #eef2f7; border-color: #cbd5e1; }
+      .btn-down:hover { background: #1d4ed8; }
+      .btn-danger:hover { background: #fee2e2; }
+      .tag-btn:hover { border-color: var(--accent); color: var(--accent); }
+      .tag-btn.active:hover { color: #fff; }
+      .tab-btn:hover { color: var(--primary); }
+      .admin-toggle:hover { border-color: var(--accent); }
+      .card-title { cursor: default; }
+    }
+
+    @media (min-width: 760px) {
+      body { padding-bottom: 60px; }
+
+      header { padding: 22px 32px; }
+      .header-inner { flex-direction: row; text-align: left; max-width: 1240px; margin: 0 auto; gap: 20px; }
+      .brand-logo { height: 62px; width: 62px; }
+      .brand-title { font-size: 1.6rem; }
+      .header-actions { position: static; flex-direction: row; margin-left: auto; align-items: center; }
+      .admin-toggle { font-size: 0.85rem; padding: 9px 16px; }
+
+      .nav-container { max-width: 1240px; margin: 0 auto; padding: 24px 32px 12px; }
+      .view-panel { max-width: 1240px; margin: 0 auto; padding: 0 32px; }
+      .nav-tabs { max-width: 480px; }
+
+      /* Ricerca e filtri sulla stessa riga */
+      .toolbar { flex-direction: row; align-items: center; gap: 16px; margin-bottom: 24px; }
+      .toolbar .search-box { margin-bottom: 0; flex: 0 0 300px; }
+      .toolbar .filter-tags { margin-bottom: 0; flex: 1; flex-wrap: wrap; overflow: visible; }
+
+      #songsList, #audioList { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+      #setlistBody { grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); }
+
+      .header-bar { padding: 22px 26px; }
+      .liturgy-title { font-size: 1.35rem; }
+      .update-bar { max-width: 640px; }
+    }
+
+    /* Il visualizzatore diventa una finestra centrata invece che a pieno schermo */
+    @media (min-width: 900px) {
+      #pdfViewer { background: rgba(15, 23, 42, .72); padding: 30px; }
+      .pdf-shell { max-width: 1040px; margin: 0 auto; border-radius: 16px; overflow: hidden; box-shadow: 0 24px 60px rgba(0,0,0,.42); }
+    }
+
+    @media (min-width: 1400px) {
+      .header-inner, .nav-container, .view-panel { max-width: 1400px; }
+    }
+
     /* --- TOAST --- */
     #toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%) translateY(200%); background: var(--text); color: #fff; padding: 14px 20px; border-radius: 12px; font-weight: 600; font-size: 0.9rem; box-shadow: 0 8px 24px rgba(0,0,0,0.25); z-index: 999; transition: transform 0.25s ease; max-width: 90vw; text-align: center; white-space: pre-line; }
     #toast.show { transform: translateX(-50%) translateY(0); }
@@ -132,12 +208,14 @@
 <body>
 
   <header>
-    <div class="header-actions">
-      <button class="admin-toggle" id="adminToggleBtn">⚙️ Admin</button>
-      <button class="admin-toggle btn-sync admin-only" id="syncBtn">🔄 Sincronizza</button>
+    <div class="header-inner">
+      <img id="mainLogo" class="brand-logo" style="display:none;" alt="Logo del coro">
+      <h1 class="brand-title" id="mainTitle">Caricamento…</h1>
+      <div class="header-actions">
+        <button class="admin-toggle" id="adminToggleBtn">⚙️ Admin</button>
+        <button class="admin-toggle btn-sync admin-only" id="syncBtn">🔄 Sincronizza</button>
+      </div>
     </div>
-    <img id="mainLogo" class="brand-logo" style="display:none;" alt="Logo del coro">
-    <h1 class="brand-title" id="mainTitle">Caricamento…</h1>
   </header>
 
   <div class="nav-container">
@@ -156,6 +234,7 @@
         <button class="btn-danger admin-only" id="clearSetlistBtn" style="border:none; border-radius:8px; padding:6px 12px; font-weight:bold; cursor:pointer;">Svuota</button>
       </div>
       <div class="setlist-update" id="setlistUpdate" hidden></div>
+      <button class="btn-pdf" id="downloadSetlistBtn" hidden>📄 Scarica la scaletta in PDF</button>
       <button class="btn-edit-title admin-only" id="editTitleBtn">✏️ Modifica data</button>
     </div>
     <div id="setlistBody"><div class="empty-state">Caricamento scaletta…</div></div>
@@ -164,27 +243,33 @@
   <!-- TAB 2: SPARTITI -->
   <div id="archiveTab" class="view-panel">
     <div class="update-bar" id="songsUpdate" hidden></div>
-    <input type="text" id="searchInput" class="search-box" placeholder="🔍 Cerca spartito…">
-    <div class="filter-tags" id="tagFilters"></div>
+    <div class="toolbar">
+      <input type="text" id="searchInput" class="search-box" placeholder="🔍 Cerca spartito…">
+      <div class="filter-tags" id="tagFilters"></div>
+    </div>
     <div id="songsList"><div class="empty-state">Caricamento archivio spartiti…</div></div>
   </div>
 
   <!-- TAB 3: AUDIO -->
   <div id="audioTab" class="view-panel">
     <div class="update-bar" id="audiosUpdate" hidden></div>
-    <input type="text" id="searchAudioInput" class="search-box" placeholder="🔍 Cerca audio o data…">
-    <div class="filter-tags" id="audioTagFilters"></div>
+    <div class="toolbar">
+      <input type="text" id="searchAudioInput" class="search-box" placeholder="🔍 Cerca audio o data…">
+      <div class="filter-tags" id="audioTagFilters"></div>
+    </div>
     <div id="audioList"><div class="empty-state">Caricamento registrazioni audio…</div></div>
   </div>
 
   <!-- VISUALIZZATORE PDF (resta dentro il sito, non apre l'app Drive) -->
   <div id="pdfViewer" hidden role="dialog" aria-modal="true" aria-label="Spartito">
-    <div class="pdf-bar">
-      <button id="pdfClose" aria-label="Chiudi">✕</button>
-      <div class="pdf-bar-title" id="pdfTitle"></div>
-      <a id="pdfDownload" href="#" target="_blank" rel="noopener">⬇️ Salva</a>
+    <div class="pdf-shell">
+      <div class="pdf-bar">
+        <button id="pdfClose" aria-label="Chiudi">✕</button>
+        <div class="pdf-bar-title" id="pdfTitle"></div>
+        <a id="pdfDownload" href="#" target="_blank" rel="noopener">⬇️ Salva</a>
+      </div>
+      <iframe id="pdfFrame" title="Spartito" allow="autoplay"></iframe>
     </div>
-    <iframe id="pdfFrame" title="Spartito" allow="autoplay"></iframe>
   </div>
 
   <div id="toast" role="status" aria-live="polite"></div>
@@ -319,6 +404,134 @@
     el.hidden = false;
   }
 
+  /* ---------- PDF della scaletta ---------- */
+  // La libreria viene scaricata solo al primo clic: così la pagina resta
+  // leggera per chi non usa questa funzione.
+  const JSPDF_URL = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+  let jsPdfLoader = null;
+
+  function loadJsPdf() {
+    if (jsPdfLoader) return jsPdfLoader;
+    jsPdfLoader = new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = JSPDF_URL;
+      s.onload = () => {
+        if (window.jspdf && window.jspdf.jsPDF) resolve(window.jspdf.jsPDF);
+        else reject(new Error('libreria non valida'));
+      };
+      s.onerror = () => { jsPdfLoader = null; reject(new Error('libreria non raggiungibile')); };
+      document.head.appendChild(s);
+    });
+    return jsPdfLoader;
+  }
+
+  function nomeFile() {
+    const base = (appData.liturgyTitle || 'scaletta')
+      .replace(/[^\p{L}\p{N}]+/gu, '_').replace(/^_+|_+$/g, '');
+    return `Scaletta_${base || 'coro'}.pdf`;
+  }
+
+  async function downloadSetlistPdf() {
+    if (!appData.setlist.length) return;
+    const btn = document.getElementById('downloadSetlistBtn');
+    const label = btn.textContent;
+    btn.textContent = '⏳ Preparo il PDF…';
+    btn.disabled = true;
+
+    try {
+      const JsPDF = await loadJsPdf();
+      const doc = new JsPDF({ unit: 'mm', format: 'a4' });
+      const W = 210, M = 18;
+      let y = 26;
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(17);
+      doc.setTextColor(15, 23, 42);
+      doc.text(appData.choirName || 'Coro', W / 2, y, { align: 'center' });
+
+      y += 8;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(11.5);
+      doc.setTextColor(71, 85, 105);
+      doc.text(appData.liturgyTitle || '', W / 2, y, { align: 'center' });
+
+      y += 7;
+      doc.setDrawColor(203, 213, 225);
+      doc.line(M, y, W - M, y);
+      y += 13;
+
+      appData.setlist.forEach(item => {
+        if (y > 258) { doc.addPage(); y = 26; }
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9);
+        doc.setTextColor(37, 99, 235);
+        doc.text(item.momento.toUpperCase(), M, y);
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(13.5);
+        doc.setTextColor(15, 23, 42);
+        const righe = doc.splitTextToSize(item.title, W - M * 2 - 30);
+        doc.text(righe, M, y + 7);
+
+        if (item.tonality) {
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(10);
+          doc.setTextColor(100, 116, 139);
+          doc.text('Tonalità: ' + item.tonality, W - M, y + 7, { align: 'right' });
+        }
+
+        y += 7 + righe.length * 6 + 8;
+        doc.setDrawColor(226, 232, 240);
+        doc.line(M, y - 5, W - M, y - 5);
+      });
+
+      // Piè di pagina su ogni pagina
+      const pagine = doc.getNumberOfPages();
+      for (let p = 1; p <= pagine; p++) {
+        doc.setPage(p);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8.5);
+        doc.setTextColor(148, 163, 184);
+        const oggi = new Date().toLocaleDateString('it-CH');
+        const num = pagine > 1 ? `  ·  ${p}/${pagine}` : '';
+        doc.text(`Generato il ${oggi}${num}`, W / 2, 288, { align: 'center' });
+      }
+
+      doc.save(nomeFile());
+    } catch (err) {
+      stampaScaletta();
+    }
+
+    btn.textContent = label;
+    btn.disabled = false;
+  }
+
+  /** Se la libreria non si carica (rete assente, blocco aziendale) si usa la stampa. */
+  function stampaScaletta() {
+    toast('Uso la stampa del browser: scegli "Salva come PDF".');
+    const righe = appData.setlist.map(i =>
+      `<tr><td class="m">${esc(i.momento)}</td><td>${esc(i.title)}</td><td class="t">${esc(i.tonality || '')}</td></tr>`
+    ).join('');
+    const w = window.open('', '_blank');
+    if (!w) { toast('Consenti le finestre pop-up per stampare.', 'error'); return; }
+    w.document.write(`<!doctype html><html lang="it"><head><meta charset="utf-8">
+      <title>${esc(nomeFile().replace(/\.pdf$/, ''))}</title><style>
+      body{font-family:Helvetica,Arial,sans-serif;padding:32px;color:#0f172a}
+      h1{font-size:20px;margin:0;text-align:center}
+      h2{font-size:13px;font-weight:400;color:#475569;margin:6px 0 22px;text-align:center}
+      table{width:100%;border-collapse:collapse}
+      td{padding:11px 4px;border-bottom:1px solid #e2e8f0;font-size:14px;font-weight:700}
+      td.m{width:140px;font-size:10px;color:#2563eb;text-transform:uppercase;letter-spacing:.5px}
+      td.t{width:95px;text-align:right;font-weight:400;color:#64748b;font-size:12px}
+      </style></head><body>
+      <h1>${esc(appData.choirName)}</h1><h2>${esc(appData.liturgyTitle)}</h2>
+      <table>${righe}</table></body></html>`);
+    w.document.close();
+    w.focus();
+    setTimeout(() => w.print(), 500);
+  }
+
   function setAdmin(on) {
     document.body.classList.toggle('is-admin', on);
     document.getElementById('adminToggleBtn').textContent = on ? "🔓 Esci Admin" : "⚙️ Admin";
@@ -361,6 +574,7 @@
   function renderSetlist() {
     const body = document.getElementById('setlistBody');
     body.innerHTML = '';
+    document.getElementById('downloadSetlistBtn').hidden = !appData.setlist.length;
 
     if (!appData.setlist.length) {
       body.innerHTML = '<div class="empty-state">Nessun canto in scaletta.<br>L\'organista la prepara prima della messa.</div>';
@@ -559,10 +773,14 @@
 
   /* ---------- Avvio ---------- */
   document.getElementById('pdfClose').addEventListener('click', closePdf);
+  document.getElementById('pdfViewer').addEventListener('click', e => {
+    if (e.target.id === 'pdfViewer') closePdf();   // clic sullo sfondo scuro
+  });
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape' && !document.getElementById('pdfViewer').hidden) closePdf();
   });
 
+  document.getElementById('downloadSetlistBtn').addEventListener('click', downloadSetlistPdf);
   document.getElementById('adminToggleBtn').addEventListener('click', login);
   document.getElementById('syncBtn').addEventListener('click', sync);
   document.getElementById('searchInput').addEventListener('input', applyFilters);
