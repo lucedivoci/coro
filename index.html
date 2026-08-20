@@ -509,7 +509,55 @@
       font-family: inherit; font-size: 0.82rem; font-weight: 600;
       cursor: pointer; text-decoration: none; flex: 0 0 auto;
     }
+    .pdf-bar button:disabled { opacity: .35; cursor: default; }
+    .pdf-bar .pdf-zoom { padding: 8px 10px; }
+
+    /* Sotto i 520px restano solo le icone: il titolo ha bisogno di spazio. */
+    @media (max-width: 520px) {
+      .pdf-bar { gap: 6px; padding: 9px 10px; }
+      .pdf-bar .label { display: none; }
+      .pdf-bar button, .pdf-bar a { padding: 8px 10px; }
+    }
+
+    /* Il palco: qui scorrono le pagine disegnate una sotto l'altra. */
+    #pdfStage {
+      flex: 1; overflow: auto; background: #3B3833;
+      padding: 14px 12px 28px;
+      -webkit-overflow-scrolling: touch;
+      text-align: center;
+    }
+    .pdf-page {
+      display: block; margin: 0 auto 14px;
+      max-width: 100%;
+      background: #fff;
+      box-shadow: 0 4px 16px rgba(0,0,0,.35);
+      border-radius: 3px;
+    }
+    /* Ingrandito oltre la larghezza dello schermo: si scorre anche in orizzontale */
+    #pdfStage.zoomed { text-align: left; }
+    #pdfStage.zoomed .pdf-page { max-width: none; margin-left: 0; margin-right: 0; }
+
+    .pdf-note {
+      color: #D9D5CD; font-size: 0.9rem; line-height: 1.6;
+      max-width: 420px; margin: 40px auto; text-align: center;
+    }
+    .pdf-note strong { display: block; font-size: 1rem; margin-bottom: 8px; color: #F1EFEA; }
+    .pdf-note .pdf-actions {
+      display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 18px;
+    }
+    .pdf-note .pdf-actions a {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--accent); color: #fff; text-decoration: none;
+      border-radius: 9px; padding: 11px 16px;
+      font-size: 0.85rem; font-weight: 600;
+    }
+    .pdf-note .pdf-actions a.ghost { background: rgba(255,255,255,.13); }
+    .pdf-count {
+      font-size: 0.74rem; color: rgba(241,239,234,.6); font-weight: 600;
+      white-space: nowrap; flex: 0 0 auto;
+    }
     #pdfFrame { flex: 1; width: 100%; border: none; background: #3B3833; }
+    #pdfFrame[hidden], #pdfStage[hidden] { display: none; }
     body.viewer-open { overflow: hidden; }
 
     /* ============================================================
@@ -657,9 +705,15 @@
       <div class="pdf-bar">
         <button id="pdfClose" aria-label="Chiudi"><span data-icon="chiudi"></span></button>
         <div class="pdf-bar-title" id="pdfTitle"></div>
-        <a id="pdfDownload" href="#" target="_blank" rel="noopener"><span data-icon="scarica"></span>Salva</a>
+        <span class="pdf-count" id="pdfCount"></span>
+        <button class="pdf-zoom" id="pdfZoomOut" aria-label="Riduci" disabled><span data-icon="zoomMeno"></span></button>
+        <button class="pdf-zoom" id="pdfZoomIn" aria-label="Ingrandisci" disabled><span data-icon="zoomPiu"></span></button>
+        <a id="pdfDownload" href="#" target="_blank" rel="noopener">
+          <span data-icon="scarica"></span><span class="label">Salva</span>
+        </a>
       </div>
-      <iframe id="pdfFrame" title="Spartito" allow="autoplay"></iframe>
+      <div id="pdfStage" tabindex="0"></div>
+      <iframe id="pdfFrame" title="Anteprima" allow="autoplay" hidden></iframe>
     </div>
   </div>
 
@@ -722,6 +776,9 @@
     cerca:    '<circle cx="11" cy="11" r="6.2"/><path d="m20 20-4.6-4.6"/>',
     pdf:      '<path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4"/><path d="M12 10.5v6"/><path d="m9.6 14.1 2.4 2.4 2.4-2.4"/>',
     piu:      '<path d="M12 5.5v13M5.5 12h13"/>',
+    zoomPiu:  '<circle cx="10.5" cy="10.5" r="6"/><path d="m19 19-4.4-4.4M10.5 8v5M8 10.5h5"/>',
+    zoomMeno: '<circle cx="10.5" cy="10.5" r="6"/><path d="m19 19-4.4-4.4M8 10.5h5"/>',
+    esterno:  '<path d="M14 4h6v6"/><path d="M20 4 11 13"/><path d="M18 14v5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 4 19V8a1.5 1.5 0 0 1 1.5-1.5H10"/>',
     rimuovi:  '<path d="m7 7 10 10M17 7 7 17"/>',
     stella:   '<path d="M12 4.5 13.7 10l5.3 1.8-5.3 1.8L12 19.5l-1.7-5.9L5 11.8 10.3 10z"/>',
     play:     '<path d="M9 6.2 18.2 12 9 17.8z" fill="currentColor"/>',
@@ -1478,32 +1535,251 @@
   });
 
   /* ---------- Ripiego: l'anteprima di Drive a pieno schermo ----------
-     Serve solo per i formati che il browser non sa aprire (per esempio
-     un .ogg su iPhone). Riuso la finestra dello spartito: lì l'altezza
-     è quella dello schermo, quindi il lettore di Drive non finisce
-     più tagliato a metà come nel riquadro dentro la scheda. */
+     Serve solo per i formati audio che il browser non sa aprire (per
+     esempio un .ogg su iPhone). Qui l'iframe di Drive resta l'unica
+     strada: se il telefono lo rifiuta, il pulsante «Apri in Drive»
+     nel riquadro porta comunque al file. */
   function apriDrive(item) {
     if (!item || !item.id) return;
-    document.getElementById('pdfTitle').textContent = item.title;
-    document.getElementById('pdfDownload').href = item.downloadUrl || '#';
-    document.getElementById('pdfFrame').src =
-      'https://drive.google.com/file/d/' + item.id + '/preview';
+    prontoPerAprire(item.title, item.downloadUrl || '#');
+
+    const stage = document.getElementById('pdfStage');
+    stage.hidden = false;
+    stage.style.flex = '0 0 auto';     // il posto va all'iframe, non al messaggio
+    stage.innerHTML = notaHtml(
+      'Riproduzione tramite Drive',
+      'Questo formato non si apre direttamente nel browser. Se il riquadro qui sotto resta nero, apri il file in Drive.',
+      item.id, item.downloadUrl);
+
+    const frame = document.getElementById('pdfFrame');
+    frame.hidden = false;
+    frame.src = 'https://drive.google.com/file/d/' + item.id + '/preview';
+
     document.getElementById('pdfViewer').hidden = false;
     document.body.classList.add('viewer-open');
   }
 
-  /* ---------- Lettore dello spartito ---------- */
-  function openPdf(fileId, title, downloadUrl) {
+  /* ==========================================================
+     LETTORE DELLO SPARTITO
+
+     L'anteprima di Drive dentro un iframe non funziona sui
+     telefoni: Drive cerca di dirottare la richiesta verso la
+     propria app, l'iframe resta vuoto e si vede uno schermo nero.
+     Non è un problema di indirizzo, quindi non basta cambiare URL.
+
+     Qui il PDF viene invece disegnato dalla pagina stessa, con
+     PDF.js: il server manda i byte del file, il browser li rende
+     in pagine di tela (canvas). Stesso risultato su computer,
+     Android e iPhone, senza dipendere da Drive.
+     ========================================================== */
+  const PDFJS_URL    = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+  const PDFJS_WORKER = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+  const ZOOM_STEPS = [1, 1.35, 1.8, 2.4, 3.2];
+  const pdfCache   = new Map();     // id del file -> byte già scaricati
+
+  let pdfLibLoader = null;
+  let pdfDoc       = null;
+  let pdfZoomIdx   = 0;
+  let pdfToken     = 0;             // annulla i disegni di uno spartito chiuso nel frattempo
+  let pdfTasks     = [];            // disegni ancora in corso
+
+  /* PDF.js non tollera due disegni sovrapposti: prima di ricominciare
+     (zoom, rotazione, chiusura) fermo quelli rimasti a metà. */
+  function fermaDisegni() {
+    pdfTasks.forEach(t => { try { t.cancel(); } catch (e) {} });
+    pdfTasks = [];
+  }
+
+
+  function loadPdfJs() {
+    if (pdfLibLoader) return pdfLibLoader;
+    pdfLibLoader = new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = PDFJS_URL;
+      s.onload = () => {
+        if (!window.pdfjsLib) { pdfLibLoader = null; reject(new Error('libreria non valida')); return; }
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER;
+        resolve(window.pdfjsLib);
+      };
+      s.onerror = () => { pdfLibLoader = null; reject(new Error('libreria non raggiungibile')); };
+      document.head.appendChild(s);
+    });
+    return pdfLibLoader;
+  }
+
+  /* Il riquadro con il messaggio e i due pulsanti di ripiego. */
+  function notaHtml(titolo, testo, fileId, downloadUrl) {
+    const apri = fileId ? 'https://drive.google.com/file/d/' + fileId + '/view' : (downloadUrl || '#');
+    return '<div class="pdf-note"><strong>' + esc(titolo) + '</strong>' + esc(testo) +
+      '<div class="pdf-actions">' +
+        '<a href="' + esc(apri) + '" target="_blank" rel="noopener">' +
+          icon('esterno') + 'Apri in Drive</a>' +
+        (downloadUrl ? '<a class="ghost" href="' + esc(downloadUrl) + '" target="_blank" rel="noopener">' +
+          icon('scarica') + 'Scarica</a>' : '') +
+      '</div></div>';
+  }
+
+  /* Prepara la finestra: titolo, link di salvataggio, comandi azzerati. */
+  function prontoPerAprire(title, downloadUrl) {
+    pdfToken++;
+    pdfDoc = null;
+    pdfZoomIdx = 0;
+    document.getElementById('pdfTitle').textContent = title || '';
+    document.getElementById('pdfDownload').href = downloadUrl || '#';
+    document.getElementById('pdfCount').textContent = '';
+    document.getElementById('pdfStage').classList.remove('zoomed');
+    document.getElementById('pdfStage').style.flex = '';
+    document.getElementById('pdfFrame').hidden = true;
+    document.getElementById('pdfFrame').src = '';
+    aggiornaZoomBtn();
+  }
+
+  function aggiornaZoomBtn() {
+    document.getElementById('pdfZoomOut').disabled = !pdfDoc || pdfZoomIdx === 0;
+    document.getElementById('pdfZoomIn').disabled  = !pdfDoc || pdfZoomIdx === ZOOM_STEPS.length - 1;
+  }
+
+  /* I byte del PDF: dal server, perché Drive non li concede al browser
+     (manca l'intestazione CORS). Restano in memoria per le riaperture. */
+  async function pdfBytes(fileId) {
+    if (pdfCache.has(fileId)) return pdfCache.get(fileId);
+
+    const res = await api('file', { id: fileId });
+    if (!res || !res.success) throw new Error((res && res.msg) || 'file non disponibile');
+
+    const bin = atob(res.b64);
+    const arr = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+
+    // Tengo in memoria gli ultimi otto spartiti, non di più.
+    if (pdfCache.size >= 8) pdfCache.delete(pdfCache.keys().next().value);
+    pdfCache.set(fileId, arr);
+    return arr;
+  }
+
+  async function openPdf(fileId, title, downloadUrl) {
     if (!fileId) { window.open(downloadUrl, '_blank', 'noopener'); return; }
-    document.getElementById('pdfTitle').textContent = title;
-    document.getElementById('pdfDownload').href = downloadUrl;
-    document.getElementById('pdfFrame').src = 'https://drive.google.com/file/d/' + fileId + '/preview';
+
+    prontoPerAprire(title, downloadUrl);
+
+    const stage = document.getElementById('pdfStage');
+    stage.hidden = false;
+    stage.innerHTML = '<div class="pdf-note">Apro lo spartito…</div>';
     document.getElementById('pdfViewer').hidden = false;
     document.body.classList.add('viewer-open');
+
+    const token = pdfToken;
+
+    try {
+      const [lib, bytes] = await Promise.all([loadPdfJs(), pdfBytes(fileId)]);
+      if (token !== pdfToken) return;
+
+      // slice(): PDF.js cede i byte al proprio thread e li svuota,
+      // quindi gli passo sempre una copia e la cache resta buona.
+      pdfDoc = await lib.getDocument({ data: bytes.slice() }).promise;
+      if (token !== pdfToken) return;
+
+      aggiornaZoomBtn();
+      await disegnaPagine(token);
+    } catch (err) {
+      if (token !== pdfToken) return;
+      stage.innerHTML = notaHtml(
+        'Anteprima non disponibile',
+        'Non sono riuscito ad aprire questo spartito (' + err.message + '). Puoi comunque leggerlo o scaricarlo da Drive.',
+        fileId, downloadUrl);
+    }
   }
+
+  /* Disegna tutte le pagine, una alla volta, aggiungendole man mano:
+     la prima compare subito, le altre arrivano mentre si legge. */
+  async function disegnaPagine(token) {
+    const stage = document.getElementById('pdfStage');
+    const larghezza = Math.max(stage.clientWidth - 24, 240);
+    const zoom = ZOOM_STEPS[pdfZoomIdx];
+
+    // Su telefono la memoria per le tele è poca: due volte i pixel
+    // dello schermo bastano per una stampa nitida, oltre si rischia
+    // che il sistema svuoti la tela lasciandola bianca.
+    const nitidezza = Math.min(window.devicePixelRatio || 1, 2);
+
+    fermaDisegni();
+    stage.classList.toggle('zoomed', zoom > 1);
+    stage.innerHTML = '';
+    stage.scrollTop = 0;
+
+    for (let n = 1; n <= pdfDoc.numPages; n++) {
+      if (token !== pdfToken) return;
+
+      const page = await pdfDoc.getPage(n);
+      if (token !== pdfToken) return;
+
+      const naturale = page.getViewport({ scale: 1 });
+      const vista = page.getViewport({ scale: (larghezza / naturale.width) * zoom });
+
+      const canvas = document.createElement('canvas');
+      canvas.className = 'pdf-page';
+      canvas.setAttribute('aria-label', 'Pagina ' + n);
+      canvas.width  = Math.floor(vista.width  * nitidezza);
+      canvas.height = Math.floor(vista.height * nitidezza);
+      canvas.style.width  = Math.floor(vista.width)  + 'px';
+      canvas.style.height = Math.floor(vista.height) + 'px';
+      stage.appendChild(canvas);
+
+      const task = page.render({
+        canvasContext: canvas.getContext('2d', { alpha: false }),
+        viewport: vista,
+        transform: nitidezza !== 1 ? [nitidezza, 0, 0, nitidezza, 0, 0] : null
+      });
+      pdfTasks.push(task);
+
+      try {
+        await task.promise;
+      } catch (e) {
+        return;   // disegno annullato: se ne sta già occupando un altro giro
+      }
+
+      if (n === 1) contaPagine();
+    }
+    if (token === pdfToken) contaPagine();
+  }
+
+  /* Indicatore «pagina X di Y»: guarda quale tela occupa il centro. */
+  function contaPagine() {
+    if (!pdfDoc) return;
+    const stage = document.getElementById('pdfStage');
+    const tele = stage.querySelectorAll('canvas');
+    if (!tele.length) return;
+
+    const centro = stage.scrollTop + stage.clientHeight / 2;
+    let corrente = 1;
+    tele.forEach((c, i) => {
+      if (c.offsetTop - stage.offsetTop <= centro) corrente = i + 1;
+    });
+    document.getElementById('pdfCount').textContent =
+      pdfDoc.numPages > 1 ? corrente + ' / ' + pdfDoc.numPages : '';
+  }
+
+  function cambiaZoom(delta) {
+    if (!pdfDoc) return;
+    const nuovo = Math.min(Math.max(pdfZoomIdx + delta, 0), ZOOM_STEPS.length - 1);
+    if (nuovo === pdfZoomIdx) return;
+    pdfZoomIdx = nuovo;
+    aggiornaZoomBtn();
+    disegnaPagine(pdfToken);
+  }
+
   function closePdf() {
+    pdfToken++;
+    fermaDisegni();
     document.getElementById('pdfViewer').hidden = true;
+    document.getElementById('pdfStage').innerHTML = '';
     document.getElementById('pdfFrame').src = '';
+    document.getElementById('pdfFrame').hidden = true;
+    document.getElementById('pdfCount').textContent = '';
+    if (pdfDoc && pdfDoc.destroy) { try { pdfDoc.destroy(); } catch (e) {} }
+    pdfDoc = null;
+
     document.body.classList.remove('viewer-open');
   }
 
@@ -1681,6 +1957,21 @@
   document.getElementById('searchInput').addEventListener('input', applyFilters);
   document.getElementById('searchAudioInput').addEventListener('input', applyAudioFilters);
   document.getElementById('pdfClose').addEventListener('click', closePdf);
+  document.getElementById('pdfZoomIn').addEventListener('click', () => cambiaZoom(1));
+  document.getElementById('pdfZoomOut').addEventListener('click', () => cambiaZoom(-1));
+  document.getElementById('pdfStage').addEventListener('scroll', contaPagine, { passive: true });
+
+  /* Se lo schermo cambia larghezza (rotazione del telefono, finestra
+     ridimensionata) le pagine vanno ridisegnate: una tela non si adatta
+     da sola come farebbe un'immagine. */
+  let ridisegnaTimer, ultimaLarghezza = window.innerWidth;
+  window.addEventListener('resize', () => {
+    if (!pdfDoc || document.getElementById('pdfViewer').hidden) return;
+    if (window.innerWidth === ultimaLarghezza) return;   // solo la tastiera che si apre
+    ultimaLarghezza = window.innerWidth;
+    clearTimeout(ridisegnaTimer);
+    ridisegnaTimer = setTimeout(() => disegnaPagine(pdfToken), 250);
+  });
   document.getElementById('pdfViewer').addEventListener('click', e => {
     if (e.target.id === 'pdfViewer') closePdf();
   });
