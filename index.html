@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Portale Canti Coro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #1e40af;
+      --primary-light: #eff6ff;
+      --accent: #2563eb;
+      --bg: #f1f5f9;
+      --card: #ffffff;
+      --text: #0f172a;
+      --text-soft: #475569;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --danger: #ef4444;
+      --danger-bg: #fef2f2;
+      --success: #10b981;
+      --radius-lg: 16px;
+      --radius-md: 10px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
+    body { background: var(--bg); color: var(--text); padding-bottom: 40px; }
+    :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+    /* --- HERO HEADER --- */
+    header {
+      background: var(--card);
+      padding: 30px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      text-align: center;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+      position: relative;
+    }
+    .brand-logo { height: 90px; width: 90px; object-fit: cover; border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.08); border: 3px solid #fff; }
+    .brand-title { font-size: 1.4rem; font-weight: 800; color: var(--text); letter-spacing: -0.5px; line-height: 1.2; }
+
+    .header-actions { position: absolute; top: 16px; right: 16px; display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
+    .admin-toggle { font-size: 0.75rem; background: #f8fafc; color: var(--muted); border: 1px solid var(--border); padding: 6px 12px; border-radius: 20px; cursor: pointer; font-weight: 600; transition: 0.2s; }
+    body.is-admin .admin-toggle { background: #fef08a; color: #854d0e; border-color: #fde047; }
+    .btn-sync { background: var(--primary); color: #fff; border: none; }
+
+    /* --- NAVIGATION TABS --- */
+    .nav-container { padding: 20px 16px 10px 16px; position: sticky; top: 0; background: var(--bg); z-index: 100; }
+    .nav-tabs { display: flex; background: #e2e8f0; padding: 6px; border-radius: 14px; gap: 4px; overflow-x: auto; scrollbar-width: none; }
+    .nav-tabs::-webkit-scrollbar { display: none; }
+    .tab-btn { flex: 1; min-width: 110px; padding: 12px 8px; border-radius: 10px; border: none; background: transparent; font-weight: 600; font-size: 0.85rem; color: var(--text-soft); cursor: pointer; text-align: center; transition: all 0.2s ease; }
+    .tab-btn.active { background: var(--card); color: var(--primary); box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+
+    .view-panel { display: none; padding: 0 16px; }
+    .view-panel.active { display: block; animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+    /* --- HEADER BAR (Scaletta) --- */
+    .header-bar { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; background: var(--primary); color: #fff; padding: 16px; border-radius: var(--radius-lg); box-shadow: 0 8px 16px rgba(30, 64, 175, 0.15); }
+    .liturgy-title { font-weight: 700; font-size: 1.1rem; }
+    .header-bar .btn-edit-title { background: rgba(255,255,255,0.2); color: #fff; padding: 6px 12px; border-radius: 8px; border: none; font-size: 0.8rem; align-self: flex-start; cursor: pointer; font-weight: 600; }
+
+    /* --- CARDS LAYOUT --- */
+    .card { background: var(--card); border-radius: var(--radius-lg); padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); border: 1px solid rgba(0,0,0,0.03); display: flex; flex-direction: column; gap: 12px; }
+    .card-title { font-size: 1.15rem; font-weight: 700; color: var(--text); line-height: 1.3; }
+
+    .badge-group { display: flex; gap: 8px; flex-wrap: wrap; }
+    .card-badge { font-size: 0.75rem; font-weight: 600; background: var(--bg); color: var(--text-soft); padding: 4px 10px; border-radius: 20px; }
+    .card-badge-momento { font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: var(--accent); background: var(--primary-light); padding: 4px 10px; border-radius: 6px; }
+    .card-badge-date { background: #fef3c7; color: #b45309; }
+
+    .card-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+    .btn { padding: 12px 16px; border-radius: var(--radius-md); font-size: 0.9rem; font-weight: 600; text-decoration: none; border: none; cursor: pointer; text-align: center; display: inline-flex; align-items: center; justify-content: center; flex: 1; transition: opacity 0.2s; }
+    .btn:active { opacity: 0.7; }
+    .btn-view { background: #f8fafc; border: 1px solid var(--border); color: var(--text); }
+    .btn-down { background: var(--primary); color: #fff; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2); }
+    .btn-danger { background: var(--danger-bg); color: var(--danger); flex: 0 0 auto; }
+
+    .admin-box { background: #fffbeb; border: 1px dashed #fcd34d; padding: 12px; border-radius: var(--radius-md); gap: 8px; margin-top: 8px; display: none; }
+    .admin-box select { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #fde047; font-weight: 500; font-size: 0.9rem; background: #fff; }
+    .btn-admin { background: #eab308; color: #fff; flex: 0 0 auto; padding: 10px 16px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; }
+
+    .search-box { width: 100%; padding: 16px; border: 2px solid transparent; background: #fff; border-radius: var(--radius-lg); font-size: 1rem; margin-bottom: 16px; outline: none; box-shadow: 0 4px 12px rgba(0,0,0,0.04); transition: border-color 0.2s; }
+    .search-box:focus { border-color: var(--accent); }
+    .filter-tags { display: flex; flex-wrap: nowrap; overflow-x: auto; gap: 8px; margin-bottom: 24px; padding-bottom: 4px; scrollbar-width: none; }
+    .filter-tags::-webkit-scrollbar { display: none; }
+    .tag-btn { flex: 0 0 auto; padding: 10px 16px; border: 1px solid var(--border); background: var(--card); border-radius: 24px; font-size: 0.9rem; font-weight: 600; cursor: pointer; color: var(--text-soft); }
+    .tag-btn.active { background: var(--text); color: #fff; border-color: var(--text); }
+
+    .empty-state { text-align: center; padding: 40px 20px; color: var(--muted); font-weight: 500; line-height: 1.5; }
+
+    .admin-only { display: none !important; }
+    body.is-admin .admin-only { display: flex !important; }
+    body.is-admin .admin-box { display: flex; }
+
+    /* --- BADGE MOMENTO (archivio spartiti) --- */
+    .card-badge-tag { background: var(--primary-light); color: var(--accent); font-weight: 700; }
+    .card-badge-all { background: #f1f5f9; color: var(--muted); font-weight: 600; font-style: italic; }
+
+    /* --- VISUALIZZATORE PDF INTEGRATO --- */
+    #pdfViewer { position: fixed; inset: 0; z-index: 500; background: #1e293b; display: flex; flex-direction: column; }
+    #pdfViewer[hidden] { display: none; }
+    .pdf-bar { display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: #0f172a; color: #fff; flex: 0 0 auto; }
+    .pdf-bar-title { flex: 1; font-weight: 700; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .pdf-bar button, .pdf-bar a { background: rgba(255,255,255,0.12); color: #fff; border: none; border-radius: 8px; padding: 8px 12px; font-size: 0.85rem; font-weight: 600; cursor: pointer; text-decoration: none; flex: 0 0 auto; }
+    .pdf-bar a:active, .pdf-bar button:active { opacity: 0.7; }
+    #pdfFrame { flex: 1; width: 100%; border: none; background: #334155; }
+    body.viewer-open { overflow: hidden; }
+
+    /* --- TOAST --- */
+    #toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%) translateY(200%); background: var(--text); color: #fff; padding: 14px 20px; border-radius: 12px; font-weight: 600; font-size: 0.9rem; box-shadow: 0 8px 24px rgba(0,0,0,0.25); z-index: 999; transition: transform 0.25s ease; max-width: 90vw; text-align: center; white-space: pre-line; }
+    #toast.show { transform: translateX(-50%) translateY(0); }
+    #toast.error { background: var(--danger); }
+    #toast.ok { background: var(--success); }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="header-actions">
+      <button class="admin-toggle" id="adminToggleBtn">⚙️ Admin</button>
+      <button class="admin-toggle btn-sync admin-only" id="syncBtn">🔄 Sincronizza</button>
+    </div>
+    <img id="mainLogo" class="brand-logo" style="display:none;" alt="Logo del coro">
+    <h1 class="brand-title" id="mainTitle">Caricamento…</h1>
+  </header>
+
+  <div class="nav-container">
+    <div class="nav-tabs">
+      <button class="tab-btn active" data-tab="setlistTab">📍 Scaletta</button>
+      <button class="tab-btn" data-tab="archiveTab">🎵 Spartiti</button>
+      <button class="tab-btn" data-tab="audioTab">🎧 Audio</button>
+    </div>
+  </div>
+
+  <!-- TAB 1: SCALETTA -->
+  <div id="setlistTab" class="view-panel active">
+    <div class="header-bar">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
+        <div class="liturgy-title" id="liturgyTitle">Caricamento…</div>
+        <button class="btn-danger admin-only" id="clearSetlistBtn" style="border:none; border-radius:8px; padding:6px 12px; font-weight:bold; cursor:pointer;">Svuota</button>
+      </div>
+      <button class="btn-edit-title admin-only" id="editTitleBtn">✏️ Modifica data</button>
+    </div>
+    <div id="setlistBody"><div class="empty-state">Caricamento scaletta…</div></div>
+  </div>
+
+  <!-- TAB 2: SPARTITI -->
+  <div id="archiveTab" class="view-panel">
+    <input type="text" id="searchInput" class="search-box" placeholder="🔍 Cerca spartito…">
+    <div class="filter-tags" id="tagFilters"></div>
+    <div id="songsList"><div class="empty-state">Caricamento archivio spartiti…</div></div>
+  </div>
+
+  <!-- TAB 3: AUDIO -->
+  <div id="audioTab" class="view-panel">
+    <input type="text" id="searchAudioInput" class="search-box" placeholder="🔍 Cerca audio o data…">
+    <div class="filter-tags" id="audioTagFilters"></div>
+    <div id="audioList"><div class="empty-state">Caricamento registrazioni audio…</div></div>
+  </div>
+
+  <!-- VISUALIZZATORE PDF (resta dentro il sito, non apre l'app Drive) -->
+  <div id="pdfViewer" hidden role="dialog" aria-modal="true" aria-label="Spartito">
+    <div class="pdf-bar">
+      <button id="pdfClose" aria-label="Chiudi">✕</button>
+      <div class="pdf-bar-title" id="pdfTitle"></div>
+      <a id="pdfDownload" href="#" target="_blank" rel="noopener">⬇️ Salva</a>
+    </div>
+    <iframe id="pdfFrame" title="Spartito" allow="autoplay"></iframe>
+  </div>
+
+  <div id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+  /* ==========================================================
+     1) INCOLLA QUI L'URL DELLA TUA WEB APP (quello che finisce con /exec)
+     ========================================================== */
+  const API_URL = "https://script.google.com/macros/s/AKfycby5l58Bwdcw2Ok4OnLovCqds1Iev_5bHCEA3gky6nwTtoNqwk6CvZ72JO7f_ZlZZRbr/exec";
+  /* ========================================================== */
+
+  const AUDIO_TAGS = ["Tutti", "Messa", "Prove", "Audio_guida"];
+
+  let appData = { songs: [], audios: [], setlist: [], momenti: [], liturgyTitle: "", choirName: "", logoUrl: "" };
+  let activeTag = "Tutti";
+  let activeAudioTag = "Tutti";
+  let adminToken = sessionStorage.getItem('coroAdminPwd') || "";
+
+  /* ---------- API ---------- */
+  // Chiamata anonima: nessun cookie viene inviato, quindi il bug
+  // multi-account di Google non si presenta mai.
+  async function api(action, params = {}) {
+    const url = new URL(API_URL);
+    url.searchParams.set('action', action);
+    Object.keys(params).forEach(k => url.searchParams.set(k, params[k]));
+
+    const res = await fetch(url.toString(), {
+      method: 'GET',
+      redirect: 'follow',
+      credentials: 'omit',
+      cache: 'no-store'
+    });
+    if (!res.ok) throw new Error('Il server ha risposto ' + res.status);
+    return res.json();
+  }
+
+  /* ---------- UI helpers ---------- */
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  let toastTimer;
+  function toast(msg, kind) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = 'show' + (kind ? ' ' + kind : '');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { el.className = ''; }, 3500);
+  }
+
+  /* ---------- Visualizzatore PDF ---------- */
+  // Lo spartito si apre dentro il sito. I link drive.google.com/file/...
+  // vengono dirottati sull'app Drive dai telefoni: qui non succede, perché
+  // l'anteprima vive in un iframe e non è una navigazione.
+  function openPdf(fileId, title, downloadUrl) {
+    if (!fileId) { window.open(downloadUrl, '_blank', 'noopener'); return; }
+    document.getElementById('pdfTitle').textContent = title;
+    document.getElementById('pdfDownload').href = downloadUrl;
+    document.getElementById('pdfFrame').src = `https://drive.google.com/file/d/${fileId}/preview`;
+    document.getElementById('pdfViewer').hidden = false;
+    document.body.classList.add('viewer-open');
+  }
+
+  function closePdf() {
+    document.getElementById('pdfViewer').hidden = true;
+    document.getElementById('pdfFrame').src = '';   // ferma il caricamento
+    document.body.classList.remove('viewer-open');
+  }
+
+  /** Badge dei momenti liturgici a cui un canto è assegnato. */
+  function momentoBadges(tags) {
+    const real = tags.filter(t => t && t.toLowerCase() !== 'tutti');
+    if (real.length) {
+      return real.map(t => `<span class="card-badge card-badge-tag">${esc(t)}</span>`).join('');
+    }
+    return '<span class="card-badge card-badge-all">Ogni momento</span>';
+  }
+
+  function setAdmin(on) {
+    document.body.classList.toggle('is-admin', on);
+    document.getElementById('adminToggleBtn').textContent = on ? "🔓 Esci Admin" : "⚙️ Admin";
+  }
+
+  /* ---------- Caricamento ---------- */
+  async function loadData() {
+    try {
+      const res = await api('data');
+      if (!res.success) throw new Error(res.msg || 'Risposta non valida');
+      renderApp(res.data);
+    } catch (err) {
+      document.getElementById('mainTitle').textContent = "Portale Canti";
+      document.getElementById('setlistBody').innerHTML =
+        '<div class="empty-state">Non riesco a contattare il server.<br>Controlla la connessione e ricarica la pagina.<br><br><small>' + esc(err.message) + '</small></div>';
+    }
+  }
+
+  function renderApp(data) {
+    appData = data;
+
+    document.getElementById('mainTitle').textContent = data.choirName;
+    const logoImg = document.getElementById('mainLogo');
+    if (data.logoUrl) { logoImg.src = data.logoUrl; logoImg.style.display = 'block'; }
+    else { logoImg.style.display = 'none'; }
+    document.getElementById('liturgyTitle').textContent = data.liturgyTitle;
+
+    renderSetlist();
+    renderTagFilters();
+    applyFilters();
+    applyAudioFilters();
+  }
+
+  /* ---------- Scaletta ---------- */
+  function renderSetlist() {
+    const body = document.getElementById('setlistBody');
+    body.innerHTML = '';
+
+    if (!appData.setlist.length) {
+      body.innerHTML = '<div class="empty-state">Nessun canto in scaletta.<br>L\'organista la prepara prima della messa.</div>';
+      return;
+    }
+
+    appData.setlist.forEach(item => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <div><span class="card-badge-momento">${esc(item.momento)}</span></div>
+        <div class="card-title">${esc(item.title)}</div>
+        ${item.tonality ? `<div class="badge-group"><span class="card-badge">Tonalità: ${esc(item.tonality)}</span></div>` : ''}
+        <div class="card-actions">
+          <button class="btn btn-view js-open">📄 Apri spartito</button>
+          <a href="${esc(item.downloadUrl)}" target="_blank" rel="noopener" class="btn btn-down">⬇️ Salva</a>
+          <button class="btn btn-danger admin-only js-remove" title="Rimuovi">✕</button>
+        </div>`;
+      card.querySelector('.js-open').addEventListener('click',
+        () => openPdf(item.fileId, item.title, item.downloadUrl));
+      card.querySelector('.js-remove').addEventListener('click', () => removeSong(item.momento));
+      body.appendChild(card);
+    });
+  }
+
+  /* ---------- Spartiti ---------- */
+  function renderTagFilters() {
+    const box = document.getElementById('tagFilters');
+    box.innerHTML = '';
+    ['Tutti'].concat(appData.momenti).forEach(m => {
+      const btn = document.createElement('button');
+      btn.className = 'tag-btn' + (activeTag === m ? ' active' : '');
+      btn.textContent = m;
+      btn.addEventListener('click', () => {
+        activeTag = m;
+        box.querySelectorAll('.tag-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        applyFilters();
+      });
+      box.appendChild(btn);
+    });
+  }
+
+  function applyFilters() {
+    const q = document.getElementById('searchInput').value.toLowerCase();
+    const container = document.getElementById('songsList');
+    container.innerHTML = '';
+
+    const filtered = appData.songs.filter(s =>
+      s.title.toLowerCase().includes(q) &&
+      (activeTag === 'Tutti' || s.tags.includes(activeTag) || s.tags.includes('Tutti'))
+    );
+
+    if (!filtered.length) {
+      container.innerHTML = '<div class="empty-state">Nessun canto trovato. Prova con un altro termine.</div>';
+      return;
+    }
+
+    const optionsHtml = appData.momenti
+      .map(m => `<option value="${esc(m)}">${esc(m)}</option>`).join('');
+
+    filtered.forEach(s => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <div class="card-title">${esc(s.title)}</div>
+        <div class="badge-group">
+          ${momentoBadges(s.tags)}
+          ${s.tonality ? `<span class="card-badge">Tonalità: ${esc(s.tonality)}</span>` : ''}
+        </div>
+        <div class="card-actions">
+          <button class="btn btn-view js-open">📄 Apri</button>
+          <a href="${esc(s.downloadUrl)}" target="_blank" rel="noopener" class="btn btn-down">⬇️ Salva</a>
+        </div>
+        <div class="admin-box">
+          <select class="js-momento">${optionsHtml}</select>
+          <button class="btn-admin js-add">➕ Aggiungi</button>
+        </div>`;
+      card.querySelector('.js-open').addEventListener('click',
+        () => openPdf(s.id, s.title, s.downloadUrl));
+      card.querySelector('.js-add').addEventListener('click', () => {
+        addToSetlist(s.id, card.querySelector('.js-momento').value);
+      });
+      container.appendChild(card);
+    });
+  }
+
+  /* ---------- Audio ---------- */
+  function renderAudioTagFilters() {
+    const box = document.getElementById('audioTagFilters');
+    box.innerHTML = '';
+    AUDIO_TAGS.forEach(t => {
+      const btn = document.createElement('button');
+      btn.className = 'tag-btn' + (activeAudioTag === t ? ' active' : '');
+      btn.textContent = t.replace('_', ' ');
+      btn.addEventListener('click', () => {
+        activeAudioTag = t;
+        box.querySelectorAll('.tag-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        applyAudioFilters();
+      });
+      box.appendChild(btn);
+    });
+  }
+
+  function applyAudioFilters() {
+    const q = document.getElementById('searchAudioInput').value.toLowerCase();
+    const container = document.getElementById('audioList');
+    container.innerHTML = '';
+
+    const filtered = appData.audios.filter(a =>
+      (a.title.toLowerCase().includes(q) || a.recordDate.toLowerCase().includes(q)) &&
+      (activeAudioTag === 'Tutti' || a.tags.includes(activeAudioTag))
+    );
+
+    if (!filtered.length) {
+      container.innerHTML = '<div class="empty-state">Nessuna registrazione trovata.</div>';
+      return;
+    }
+
+    filtered.forEach(a => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <div class="card-title">${esc(a.title)}</div>
+        <div class="badge-group">
+          <span class="card-badge">${esc(a.tags.join(', ') || 'Audio')}</span>
+          ${a.recordDate ? `<span class="card-badge card-badge-date">📅 ${esc(a.recordDate)}</span>` : ''}
+        </div>
+        <iframe src="https://drive.google.com/file/d/${esc(a.id)}/preview"
+                width="100%" height="80" loading="lazy" allow="autoplay"
+                style="border:none; border-radius:8px; margin: 12px 0;"></iframe>
+        <div class="card-actions">
+          <a href="${esc(a.downloadUrl)}" target="_blank" rel="noopener" class="btn btn-view" style="width:100%;">⬇️ Scarica file audio</a>
+        </div>`;
+      container.appendChild(card);
+    });
+  }
+
+  /* ---------- Azioni admin ---------- */
+  async function login() {
+    if (adminToken) {
+      if (confirm("Vuoi uscire dalla modalità Admin?")) {
+        adminToken = "";
+        sessionStorage.removeItem('coroAdminPwd');
+        setAdmin(false);
+      }
+      return;
+    }
+    const pwd = prompt("Password Admin:");
+    if (!pwd) return;
+    try {
+      const res = await api('login', { pwd });
+      if (res.success) {
+        adminToken = pwd;
+        sessionStorage.setItem('coroAdminPwd', pwd);
+        setAdmin(true);
+        toast("Modalità Admin attiva", "ok");
+      } else {
+        toast("Password errata", "error");
+      }
+    } catch (e) { toast("Errore di connessione", "error"); }
+  }
+
+  async function run(action, params, okMsg) {
+    if (!adminToken) return;
+    try {
+      const res = await api(action, Object.assign({ pwd: adminToken }, params));
+      if (res.success) {
+        toast(okMsg || res.msg, "ok");
+        await loadData();
+      } else {
+        toast(res.msg || "Operazione non riuscita", "error");
+      }
+    } catch (e) { toast("Errore di connessione", "error"); }
+  }
+
+  async function sync() {
+    if (!adminToken) return;
+    const btn = document.getElementById('syncBtn');
+    const label = btn.textContent;
+    btn.textContent = "⏳ Ricerca…"; btn.disabled = true; btn.style.opacity = "0.7";
+    try {
+      const res = await api('sync', { pwd: adminToken });
+      toast(res.msg, res.success ? "ok" : "error");
+      if (res.success) await loadData();
+    } catch (e) { toast("Errore di connessione", "error"); }
+    btn.textContent = label; btn.disabled = false; btn.style.opacity = "1";
+  }
+
+  function addToSetlist(songId, momento) { run('add', { songId, momento }); }
+
+  function removeSong(momento) {
+    if (confirm(`Rimuovere il canto da "${momento}"?`)) run('remove', { momento });
+  }
+
+  /* ---------- Avvio ---------- */
+  document.getElementById('pdfClose').addEventListener('click', closePdf);
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && !document.getElementById('pdfViewer').hidden) closePdf();
+  });
+
+  document.getElementById('adminToggleBtn').addEventListener('click', login);
+  document.getElementById('syncBtn').addEventListener('click', sync);
+  document.getElementById('searchInput').addEventListener('input', applyFilters);
+  document.getElementById('searchAudioInput').addEventListener('input', applyAudioFilters);
+
+  document.getElementById('editTitleBtn').addEventListener('click', () => {
+    const current = document.getElementById('liturgyTitle').textContent;
+    const value = prompt("Intestazione (data / orario):", current);
+    if (value && value.trim()) run('title', { value: value.trim() });
+  });
+
+  document.getElementById('clearSetlistBtn').addEventListener('click', () => {
+    if (confirm("Vuoi svuotare tutta la scaletta attiva?")) run('clear', {});
+  });
+
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(btn.dataset.tab).classList.add('active');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  });
+
+  renderAudioTagFilters();
+  if (adminToken) setAdmin(true);
+  loadData();
+  </script>
+</body>
+</html>
