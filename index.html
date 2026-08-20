@@ -100,6 +100,14 @@
     body.is-admin .admin-only { display: flex !important; }
     body.is-admin .admin-box { display: flex; }
 
+    /* --- BARRE DI AGGIORNAMENTO --- */
+    .update-bar { display: flex; align-items: center; gap: 8px; padding: 11px 14px; border-radius: 12px; font-size: 0.85rem; font-weight: 600; margin-bottom: 16px; line-height: 1.35; }
+    .update-bar[hidden] { display: none; }
+    .update-bar.fresh { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
+    .update-bar.old { background: var(--card); color: var(--muted); border: 1px solid var(--border); font-weight: 500; }
+    .setlist-update { font-size: 0.8rem; font-weight: 500; color: rgba(255,255,255,0.75); }
+    .setlist-update[hidden] { display: none; }
+
     /* --- BADGE MOMENTO (archivio spartiti) --- */
     .card-badge-tag { background: var(--primary-light); color: var(--accent); font-weight: 700; }
     .card-badge-all { background: #f1f5f9; color: var(--muted); font-weight: 600; font-style: italic; }
@@ -147,6 +155,7 @@
         <div class="liturgy-title" id="liturgyTitle">Caricamento…</div>
         <button class="btn-danger admin-only" id="clearSetlistBtn" style="border:none; border-radius:8px; padding:6px 12px; font-weight:bold; cursor:pointer;">Svuota</button>
       </div>
+      <div class="setlist-update" id="setlistUpdate" hidden></div>
       <button class="btn-edit-title admin-only" id="editTitleBtn">✏️ Modifica data</button>
     </div>
     <div id="setlistBody"><div class="empty-state">Caricamento scaletta…</div></div>
@@ -154,6 +163,7 @@
 
   <!-- TAB 2: SPARTITI -->
   <div id="archiveTab" class="view-panel">
+    <div class="update-bar" id="songsUpdate" hidden></div>
     <input type="text" id="searchInput" class="search-box" placeholder="🔍 Cerca spartito…">
     <div class="filter-tags" id="tagFilters"></div>
     <div id="songsList"><div class="empty-state">Caricamento archivio spartiti…</div></div>
@@ -161,6 +171,7 @@
 
   <!-- TAB 3: AUDIO -->
   <div id="audioTab" class="view-panel">
+    <div class="update-bar" id="audiosUpdate" hidden></div>
     <input type="text" id="searchAudioInput" class="search-box" placeholder="🔍 Cerca audio o data…">
     <div class="filter-tags" id="audioTagFilters"></div>
     <div id="audioList"><div class="empty-state">Caricamento registrazioni audio…</div></div>
@@ -254,6 +265,60 @@
     return '<span class="card-badge card-badge-all">Ogni momento</span>';
   }
 
+  /* ---------- Avvisi di aggiornamento ---------- */
+  const GIORNI_NOVITA = 14;   // per quanti giorni un aggiornamento resta "nuovo"
+
+  /** "20/08/2026 18:30" -> millisecondi. Restituisce 0 se non riconosciuto. */
+  function parseStamp(s) {
+    const m = String(s || '').match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})(?:[ T](\d{1,2}):(\d{2}))?/);
+    if (!m) return 0;
+    let y = +m[3]; if (y < 100) y += 2000;
+    return new Date(y, +m[2] - 1, +m[1], +(m[4] || 0), +(m[5] || 0)).getTime();
+  }
+
+  /** "oggi", "ieri", "3 giorni fa", oppure la data secca. */
+  function quando(ts, testo) {
+    if (!ts) return testo;
+    const oggi = new Date(); oggi.setHours(0, 0, 0, 0);
+    const quel = new Date(ts); quel.setHours(0, 0, 0, 0);
+    const giorni = Math.round((oggi - quel) / 86400000);
+    if (giorni <= 0) return "oggi";
+    if (giorni === 1) return "ieri";
+    if (giorni < 7) return giorni + " giorni fa";
+    return "il " + testo.split(' ')[0];
+  }
+
+  function giorniDa(ts) {
+    return ts ? (Date.now() - ts) / 86400000 : 9999;
+  }
+
+  function renderUpdateBar(elId, info, singolare, plurale) {
+    const el = document.getElementById(elId);
+    const ts = parseStamp(info && info.date);
+    if (!ts) { el.hidden = true; return; }
+
+    const recente = giorniDa(ts) <= GIORNI_NOVITA;
+    const n = (info.count || 0);
+
+    if (recente && n > 0) {
+      el.className = 'update-bar fresh';
+      el.textContent = `🆕 ${n} ${n === 1 ? singolare : plurale} ${quando(ts, info.date)}`;
+    } else {
+      el.className = 'update-bar old';
+      el.textContent = `Ultimo aggiornamento dell'archivio: ${info.date}`;
+    }
+    el.hidden = false;
+  }
+
+  function renderSetlistUpdate(info) {
+    const el = document.getElementById('setlistUpdate');
+    const ts = parseStamp(info && info.date);
+    if (!ts) { el.hidden = true; return; }
+    const recente = giorniDa(ts) <= GIORNI_NOVITA;
+    el.textContent = (recente ? '✨ Scaletta aggiornata ' : 'Aggiornata ') + quando(ts, info.date);
+    el.hidden = false;
+  }
+
   function setAdmin(on) {
     document.body.classList.toggle('is-admin', on);
     document.getElementById('adminToggleBtn').textContent = on ? "🔓 Esci Admin" : "⚙️ Admin";
@@ -280,6 +345,11 @@
     if (data.logoUrl) { logoImg.src = data.logoUrl; logoImg.style.display = 'block'; }
     else { logoImg.style.display = 'none'; }
     document.getElementById('liturgyTitle').textContent = data.liturgyTitle;
+
+    const upd = data.updates || {};
+    renderSetlistUpdate(upd.setlist);
+    renderUpdateBar('songsUpdate', upd.songs, 'nuovo spartito aggiunto', 'nuovi spartiti aggiunti');
+    renderUpdateBar('audiosUpdate', upd.audios, 'nuova registrazione aggiunta', 'nuove registrazioni aggiunte');
 
     renderSetlist();
     renderTagFilters();
