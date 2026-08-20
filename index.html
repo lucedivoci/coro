@@ -2,271 +2,501 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Portale Canti Coro</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#F1EFEA">
+  <title>Portale dei canti</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
   <style>
+    /* ============================================================
+       TAVOLOZZA — fissa
+       Bianco di carta: il fondo comune a Svizzera, Ticino e Vaticano.
+       Rosso: Svizzera e Ticino insieme. Oro: la nota vaticana, rara.
+       Calce e granito: i muri e i sagrati di Massagno.
+       ============================================================ */
     :root {
-      --primary: #1e40af;
-      --primary-light: #eff6ff;
-      --accent: #2563eb;
-      --bg: #f1f5f9;
-      --card: #ffffff;
-      --text: #0f172a;
-      --text-soft: #475569;
-      --muted: #64748b;
-      --border: #e2e8f0;
-      --danger: #ef4444;
-      --danger-bg: #fef2f2;
-      --success: #10b981;
-      --radius-lg: 16px;
-      --radius-md: 10px;
+      --paper:      #F1EFEA;
+      --surface:    #FFFFFF;
+      --surface-2:  #FAF9F6;
+      --ink:        #1C1B19;
+      --ink-soft:   #55534E;
+      --ink-mute:   #8A867E;
+      --granito:    #5E6166;
+      --rule:       #DBD8D1;
+      --rule-soft:  #E8E5DE;
+
+      --accent:      #A5252B;
+      --accent-deep: #85161C;
+      --accent-soft: #F7EAEA;
+
+      --gold:      #B08B33;
+      --gold-soft: #F6EEDC;
+      --gold-ink:  #6E5619;
+
+      --radius:    14px;
+      --radius-sm: 9px;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
-    body { background: var(--bg); color: var(--text); padding-bottom: 40px; }
-    :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
-    /* --- HERO HEADER --- */
-    header {
-      background: var(--card);
-      padding: 30px 20px;
-      border-bottom: 1px solid var(--border);
+    body {
+      background: var(--paper);
+      color: var(--ink);
+      font-family: 'Archivo', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 16px;
+      line-height: 1.5;
+      padding-bottom: 48px;
+      -webkit-font-smoothing: antialiased;
+    }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+    .icon { flex: 0 0 auto; }
+
+    /* Le voci dei canti sono il contenuto vero: hanno il carattere del libretto */
+    .serif { font-family: 'EB Garamond', Georgia, serif; }
+
+    /* Occhielli: etichette piccole, maiuscoletto spaziato */
+    .eyebrow {
+      font-size: 0.66rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    /* ============================================================
+       TESTATA
+       ============================================================ */
+    .site-header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--rule);
+      padding: 22px 20px;
+    }
+    .header-inner {
+      max-width: 1180px;
+      margin: 0 auto;
       display: flex;
-      flex-direction: column;
       align-items: center;
       gap: 16px;
-      text-align: center;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.03);
-      position: relative;
     }
-    .brand-logo { height: 90px; width: 90px; object-fit: cover; border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.08); border: 3px solid #fff; }
-    .brand-title { font-size: 1.4rem; font-weight: 800; color: var(--text); letter-spacing: -0.5px; line-height: 1.2; }
+    .brand-logo {
+      height: 54px; width: 54px;
+      object-fit: cover;
+      border-radius: 50%;
+      border: 1px solid var(--rule);
+      flex: 0 0 auto;
+    }
+    .brand { min-width: 0; flex: 1; }
+    .brand-title {
+      font-family: 'EB Garamond', Georgia, serif;
+      font-size: 1.55rem;
+      font-weight: 600;
+      line-height: 1.15;
+      letter-spacing: -0.01em;
+    }
+    .header-actions { display: flex; gap: 8px; flex: 0 0 auto; }
 
-    .header-actions { position: absolute; top: 16px; right: 16px; display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
-    .admin-toggle { font-size: 0.75rem; background: #f8fafc; color: var(--muted); border: 1px solid var(--border); padding: 6px 12px; border-radius: 20px; cursor: pointer; font-weight: 600; transition: 0.2s; }
-    body.is-admin .admin-toggle { background: #fef08a; color: #854d0e; border-color: #fde047; }
-    .btn-sync { background: var(--primary); color: #fff; border: none; }
+    .ghost-btn {
+      display: inline-flex; align-items: center; gap: 7px;
+      background: var(--surface);
+      border: 1px solid var(--rule);
+      color: var(--ink-soft);
+      border-radius: 999px;
+      padding: 9px 14px;
+      font-family: inherit;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: border-color .15s, color .15s;
+    }
+    .ghost-btn .label { display: none; }
+    body.is-admin #adminToggleBtn { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
 
-    /* --- NAVIGATION TABS --- */
-    .nav-container { padding: 20px 16px 10px 16px; position: sticky; top: 0; background: var(--bg); z-index: 100; }
-    .nav-tabs { display: flex; background: #e2e8f0; padding: 6px; border-radius: 14px; gap: 4px; overflow-x: auto; scrollbar-width: none; }
-    .nav-tabs::-webkit-scrollbar { display: none; }
-    .tab-btn { flex: 1; min-width: 110px; padding: 12px 8px; border-radius: 10px; border: none; background: transparent; font-weight: 600; font-size: 0.85rem; color: var(--text-soft); cursor: pointer; text-align: center; transition: all 0.2s ease; }
-    .tab-btn.active { background: var(--card); color: var(--primary); box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+    /* ============================================================
+       NAVIGAZIONE — linguette con filo sotto, come un indice
+       ============================================================ */
+    .nav-wrap {
+      position: sticky; top: 0; z-index: 90;
+      background: var(--paper);
+      border-bottom: 1px solid var(--rule);
+    }
+    .nav-inner {
+      max-width: 1180px; margin: 0 auto;
+      display: flex; gap: 4px;
+      padding: 0 12px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .nav-inner::-webkit-scrollbar { display: none; }
+    .tab-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: none; border: none;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      padding: 15px 14px;
+      font-family: inherit;
+      font-size: 0.9rem; font-weight: 600;
+      color: var(--ink-mute);
+      cursor: pointer; white-space: nowrap;
+      transition: color .15s, border-color .15s;
+    }
+    .tab-btn.active { color: var(--accent-deep); border-bottom-color: var(--accent); }
 
-    .view-panel { display: none; padding: 0 16px; }
-    .view-panel.active { display: block; animation: fadeIn 0.3s ease; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-    @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+    .view-panel { display: none; max-width: 1180px; margin: 0 auto; padding: 24px 20px 0; }
+    .view-panel.active { display: block; animation: rise .28s ease both; }
+    @keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+    @media (prefers-reduced-motion: reduce) { *, *::before { animation: none !important; transition: none !important; } }
 
-    /* --- HEADER BAR (Scaletta) --- */
-    .header-bar { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; background: var(--primary); color: #fff; padding: 16px; border-radius: var(--radius-lg); box-shadow: 0 8px 16px rgba(30, 64, 175, 0.15); }
-    .liturgy-title { font-weight: 700; font-size: 1.1rem; }
-    .header-bar .btn-edit-title { background: rgba(255,255,255,0.2); color: #fff; padding: 6px 12px; border-radius: 8px; border: none; font-size: 0.8rem; align-self: flex-start; cursor: pointer; font-weight: 600; }
-    .btn-pdf { background: #fff; color: var(--primary); border: none; border-radius: 10px; padding: 12px 18px; font-size: 0.9rem; font-weight: 700; cursor: pointer; align-self: flex-start; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
-    .btn-pdf[hidden] { display: none; }
-    .btn-pdf:disabled { opacity: 0.65; cursor: default; }
+    /* ============================================================
+       INTESTAZIONE DELLA SCALETTA
+       ============================================================ */
+    .liturgy-head {
+      border-left: 3px solid var(--accent);
+      padding: 2px 0 2px 18px;
+      margin-bottom: 26px;
+      display: flex; flex-direction: column; align-items: flex-start; gap: 10px;
+    }
+    .liturgy-title {
+      font-family: 'EB Garamond', Georgia, serif;
+      font-size: 1.85rem; font-weight: 600; line-height: 1.15;
+    }
+    .liturgy-meta { font-size: 0.8rem; color: var(--ink-mute); }
+    .liturgy-meta[hidden] { display: none; }
+    .liturgy-tools { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 2px; }
 
-    /* --- CARDS LAYOUT --- */
-    .card { background: var(--card); border-radius: var(--radius-lg); padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); border: 1px solid rgba(0,0,0,0.03); display: flex; flex-direction: column; gap: 12px; }
-    .card-title { font-size: 1.15rem; font-weight: 700; color: var(--text); line-height: 1.3; }
+    /* ============================================================
+       LA SPINA — l'ordine della messa reso visibile
+       ============================================================ */
+    .spine { list-style: none; max-width: 780px; }
+    .stop { position: relative; padding-left: 32px; }
+    .stop::before {
+      content: '';
+      position: absolute; left: 8px; top: 24px; bottom: -6px;
+      width: 1.5px; background: var(--rule);
+    }
+    .stop:last-child::before { display: none; }
+    .stop-dot {
+      position: absolute; left: 0; top: 8px;
+      width: 17px; height: 17px; border-radius: 50%;
+      background: var(--surface);
+      border: 1.5px solid var(--accent);
+      display: grid; place-items: center;
+    }
+    .stop-dot::after { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
 
-    .badge-group { display: flex; gap: 8px; flex-wrap: wrap; }
-    .card-badge { font-size: 0.75rem; font-weight: 600; background: var(--bg); color: var(--text-soft); padding: 4px 10px; border-radius: 20px; }
-    .card-badge-momento { font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: var(--accent); background: var(--primary-light); padding: 4px 10px; border-radius: 6px; }
-    .card-badge-date { background: #fef3c7; color: #b45309; }
+    .stop-body {
+      background: var(--surface);
+      border: 1px solid var(--rule);
+      border-radius: var(--radius);
+      padding: 15px 18px 16px;
+      margin-bottom: 14px;
+    }
+    .stop-title {
+      font-family: 'EB Garamond', Georgia, serif;
+      font-size: 1.4rem; font-weight: 600; line-height: 1.2;
+      margin: 5px 0 0;
+    }
+    .stop-key { font-size: 0.8rem; color: var(--ink-mute); margin-top: 4px; }
+    .stop-actions { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
 
-    .card-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
-    .btn { padding: 12px 16px; border-radius: var(--radius-md); font-size: 0.9rem; font-weight: 600; text-decoration: none; border: none; cursor: pointer; text-align: center; display: inline-flex; align-items: center; justify-content: center; flex: 1; transition: opacity 0.2s; }
-    .btn:active { opacity: 0.7; }
-    .btn-view { background: #f8fafc; border: 1px solid var(--border); color: var(--text); }
-    .btn-down { background: var(--primary); color: #fff; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2); }
-    .btn-danger { background: var(--danger-bg); color: var(--danger); flex: 0 0 auto; }
+    /* ============================================================
+       PULSANTI
+       ============================================================ */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+      font-family: inherit; font-size: 0.86rem; font-weight: 600;
+      padding: 10px 15px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--rule);
+      background: var(--surface-2);
+      color: var(--ink);
+      text-decoration: none; cursor: pointer;
+      transition: background .15s, border-color .15s;
+    }
+    .btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .btn-quiet { background: transparent; }
+    .btn-danger { background: transparent; border-color: var(--rule); color: var(--granito); padding: 10px 12px; }
+    .btn-paper { background: var(--surface); border-color: var(--rule); }
+    .btn:disabled { opacity: .6; cursor: default; }
+    .btn:active { transform: translateY(1px); }
 
-    .admin-box { background: #fffbeb; border: 1px dashed #fcd34d; padding: 12px; border-radius: var(--radius-md); gap: 8px; margin-top: 8px; display: none; }
-    .admin-box select { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #fde047; font-weight: 500; font-size: 0.9rem; background: #fff; }
-    .btn-admin { background: #eab308; color: #fff; flex: 0 0 auto; padding: 10px 16px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; }
+    /* ============================================================
+       SCHEDE (spartiti e audio)
+       ============================================================ */
+    .grid { display: grid; gap: 14px; grid-template-columns: 1fr; align-items: start; }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--rule);
+      border-radius: var(--radius);
+      padding: 17px 18px 18px;
+      display: flex; flex-direction: column; gap: 9px;
+      height: 100%;
+    }
+    .card-title {
+      font-family: 'EB Garamond', Georgia, serif;
+      font-size: 1.3rem; font-weight: 600; line-height: 1.2;
+    }
+    .tags { display: flex; flex-wrap: wrap; gap: 6px; }
+    .tag {
+      font-size: 0.68rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+      color: var(--ink-soft);
+      border: 1px solid var(--rule);
+      border-radius: 5px;
+      padding: 3px 8px;
+    }
+    .tag-any { color: var(--ink-mute); border-style: dashed; }
+    .tag-date { border-color: var(--rule); color: var(--ink-mute); text-transform: none; letter-spacing: 0; font-weight: 500; }
+    .tag-key { text-transform: none; letter-spacing: 0; font-weight: 500; }
 
-    .search-box { width: 100%; padding: 16px; border: 2px solid transparent; background: #fff; border-radius: var(--radius-lg); font-size: 1rem; margin-bottom: 16px; outline: none; box-shadow: 0 4px 12px rgba(0,0,0,0.04); transition: border-color 0.2s; }
+    /* Segnale: questo canto è già in scaletta */
+    .in-setlist {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 0.7rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+      color: var(--gold-ink);
+      background: var(--gold-soft);
+      border-radius: 5px; padding: 4px 9px;
+      align-self: flex-start;
+    }
+    .in-setlist::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--gold); }
+
+    .card-actions { display: flex; gap: 8px; margin-top: auto; padding-top: 4px; }
+    .card-actions .btn { flex: 1; }
+
+    .admin-box {
+      display: none; gap: 8px;
+      border-top: 1px dashed var(--rule);
+      padding-top: 12px; margin-top: 2px;
+    }
+    .admin-box select {
+      flex: 1; min-width: 0;
+      font-family: inherit; font-size: 0.85rem;
+      padding: 9px 10px;
+      border: 1px solid var(--rule); border-radius: var(--radius-sm);
+      background: var(--surface-2); color: var(--ink);
+    }
+
+    /* ============================================================
+       RICERCA E FILTRI
+       ============================================================ */
+    .toolbar { display: flex; flex-direction: column; gap: 12px; margin-bottom: 22px; }
+    .search-wrap { position: relative; display: flex; align-items: center; }
+    .search-wrap .icon { position: absolute; left: 14px; color: var(--ink-mute); pointer-events: none; }
+    .search-box {
+      width: 100%;
+      font-family: inherit; font-size: 0.95rem;
+      padding: 13px 14px 13px 42px;
+      border: 1px solid var(--rule); border-radius: var(--radius-sm);
+      background: var(--surface); color: var(--ink);
+      outline: none;
+      transition: border-color .15s;
+    }
+    .search-box::placeholder { color: var(--ink-mute); }
     .search-box:focus { border-color: var(--accent); }
-    .filter-tags { display: flex; flex-wrap: nowrap; overflow-x: auto; gap: 8px; margin-bottom: 24px; padding-bottom: 4px; scrollbar-width: none; }
-    .filter-tags::-webkit-scrollbar { display: none; }
-    .tag-btn { flex: 0 0 auto; padding: 10px 16px; border: 1px solid var(--border); background: var(--card); border-radius: 24px; font-size: 0.9rem; font-weight: 600; cursor: pointer; color: var(--text-soft); }
-    .tag-btn.active { background: var(--text); color: #fff; border-color: var(--text); }
 
-    .empty-state { text-align: center; padding: 40px 20px; color: var(--muted); font-weight: 500; line-height: 1.5; }
+    .filter-tags { display: flex; gap: 7px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
+    .filter-tags::-webkit-scrollbar { display: none; }
+    .tag-btn {
+      flex: 0 0 auto;
+      font-family: inherit; font-size: 0.8rem; font-weight: 600;
+      padding: 8px 14px;
+      border: 1px solid var(--rule); border-radius: 999px;
+      background: var(--surface); color: var(--ink-soft);
+      cursor: pointer; white-space: nowrap;
+      transition: all .15s;
+    }
+    .tag-btn.active { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+
+    /* ============================================================
+       AVVISI
+       ============================================================ */
+    .update-bar {
+      display: flex; align-items: center; gap: 9px;
+      font-size: 0.82rem; font-weight: 600;
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      margin-bottom: 18px;
+      max-width: 620px;
+    }
+    .update-bar[hidden] { display: none; }
+    .update-bar.fresh { background: var(--gold-soft); color: var(--gold-ink); }
+    .update-bar.old { background: transparent; border: 1px solid var(--rule-soft); color: var(--ink-mute); font-weight: 500; }
+
+    .empty-state {
+      grid-column: 1 / -1;
+      text-align: center; padding: 46px 20px;
+      color: var(--ink-mute);
+      font-family: 'EB Garamond', Georgia, serif;
+      font-size: 1.15rem; font-style: italic;
+      line-height: 1.55;
+    }
 
     .admin-only { display: none !important; }
-    body.is-admin .admin-only { display: flex !important; }
+    body.is-admin .admin-only { display: inline-flex !important; }
     body.is-admin .admin-box { display: flex; }
 
-    /* --- BARRE DI AGGIORNAMENTO --- */
-    .update-bar { display: flex; align-items: center; gap: 8px; padding: 11px 14px; border-radius: 12px; font-size: 0.85rem; font-weight: 600; margin-bottom: 16px; line-height: 1.35; }
-    .update-bar[hidden] { display: none; }
-    .update-bar.fresh { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
-    .update-bar.old { background: var(--card); color: var(--muted); border: 1px solid var(--border); font-weight: 500; }
-    .setlist-update { font-size: 0.8rem; font-weight: 500; color: rgba(255,255,255,0.75); }
-    .setlist-update[hidden] { display: none; }
-
-    /* --- BADGE MOMENTO (archivio spartiti) --- */
-    .card-badge-tag { background: var(--primary-light); color: var(--accent); font-weight: 700; }
-    .card-badge-all { background: #f1f5f9; color: var(--muted); font-weight: 600; font-style: italic; }
-
-    /* --- VISUALIZZATORE PDF INTEGRATO --- */
-    #pdfViewer { position: fixed; inset: 0; z-index: 500; background: #1e293b; display: flex; flex-direction: column; }
+    /* ============================================================
+       LETTORE DELLO SPARTITO
+       ============================================================ */
+    #pdfViewer { position: fixed; inset: 0; z-index: 400; background: #2A2825; display: flex; }
     #pdfViewer[hidden] { display: none; }
-    .pdf-bar { display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: #0f172a; color: #fff; flex: 0 0 auto; }
-    .pdf-bar-title { flex: 1; font-weight: 700; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .pdf-bar button, .pdf-bar a { background: rgba(255,255,255,0.12); color: #fff; border: none; border-radius: 8px; padding: 8px 12px; font-size: 0.85rem; font-weight: 600; cursor: pointer; text-decoration: none; flex: 0 0 auto; }
-    .pdf-bar a:active, .pdf-bar button:active { opacity: 0.7; }
-    #pdfFrame { flex: 1; width: 100%; border: none; background: #334155; }
+    .pdf-shell { display: flex; flex-direction: column; width: 100%; height: 100%; }
+    .pdf-bar {
+      display: flex; align-items: center; gap: 10px;
+      padding: 11px 14px;
+      background: #1C1B19; color: #F1EFEA;
+      flex: 0 0 auto;
+    }
+    .pdf-bar-title {
+      flex: 1; min-width: 0;
+      font-family: 'EB Garamond', Georgia, serif;
+      font-size: 1.1rem; font-weight: 600;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .pdf-bar button, .pdf-bar a {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(255,255,255,.1); color: inherit;
+      border: none; border-radius: 8px;
+      padding: 8px 12px;
+      font-family: inherit; font-size: 0.82rem; font-weight: 600;
+      cursor: pointer; text-decoration: none; flex: 0 0 auto;
+    }
+    #pdfFrame { flex: 1; width: 100%; border: none; background: #3B3833; }
     body.viewer-open { overflow: hidden; }
 
     /* ============================================================
-       ADATTAMENTO A SCHERMI GRANDI
-       Il telefono resta com'era; da 760px in su il layout si apre.
+       AVVISO A COMPARSA
        ============================================================ */
-
-    /* Le liste diventano griglie: una colonna sul telefono, più colonne
-       quando c'è spazio. Le schede si allineano in altezza e i pulsanti
-       restano ancorati in basso. */
-    #songsList, #audioList, #setlistBody {
-      display: grid;
-      gap: 16px;
-      grid-template-columns: 1fr;
-      align-items: start;
+    #toast {
+      position: fixed; left: 50%; bottom: 22px;
+      transform: translateX(-50%) translateY(200%);
+      background: var(--ink); color: var(--paper);
+      padding: 13px 20px; border-radius: 10px;
+      font-size: 0.86rem; font-weight: 500;
+      box-shadow: 0 10px 30px rgba(28,27,25,.28);
+      z-index: 500; max-width: 90vw; text-align: center; white-space: pre-line;
+      transition: transform .25s ease;
     }
-    #songsList .card, #audioList .card, #setlistBody .card { margin-bottom: 0; height: 100%; }
-    #songsList .card-actions, #audioList .card-actions, #setlistBody .card-actions { margin-top: auto; }
-    .empty-state { grid-column: 1 / -1; }
+    #toast.show { transform: translateX(-50%) translateY(0); }
+    #toast.error { background: var(--accent-deep); color: #fff; }
 
-    .header-inner { display: flex; flex-direction: column; align-items: center; gap: 16px; width: 100%; }
-    .toolbar { display: flex; flex-direction: column; }
-    .pdf-shell { display: flex; flex-direction: column; height: 100%; }
-
-    /* Effetti riservati a chi usa un mouse: sul touch non servono. */
+    /* ============================================================
+       SCHERMI GRANDI
+       ============================================================ */
     @media (hover: hover) {
-      .card { transition: transform .18s ease, box-shadow .18s ease; }
-      .card:hover { transform: translateY(-2px); box-shadow: 0 10px 26px rgba(15,23,42,.09); }
-      .btn-view:hover { background: #eef2f7; border-color: #cbd5e1; }
-      .btn-down:hover { background: #1d4ed8; }
-      .btn-danger:hover { background: #fee2e2; }
-      .tag-btn:hover { border-color: var(--accent); color: var(--accent); }
-      .tag-btn.active:hover { color: #fff; }
-      .tab-btn:hover { color: var(--primary); }
-      .admin-toggle:hover { border-color: var(--accent); }
-      .card-title { cursor: default; }
+      .card, .stop-body { transition: border-color .18s, box-shadow .18s; }
+      .card:hover, .stop-body:hover { border-color: #CFCBC2; box-shadow: 0 6px 18px rgba(28,27,25,.05); }
+      .btn:hover { border-color: #CBC7BE; background: var(--surface); }
+      .btn-primary:hover { background: var(--accent-deep); border-color: var(--accent-deep); }
+      .btn-danger:hover { color: var(--accent-deep); border-color: var(--accent); }
+      .tag-btn:hover { border-color: var(--ink-mute); color: var(--ink); }
+      .tag-btn.active:hover { color: var(--paper); }
+      .tab-btn:hover { color: var(--ink); }
+      .ghost-btn:hover { border-color: var(--ink-mute); color: var(--ink); }
+    }
+
+    @media (min-width: 640px) {
+      .ghost-btn .label { display: inline; }
     }
 
     @media (min-width: 760px) {
-      body { padding-bottom: 60px; }
-
-      header { padding: 22px 32px; }
-      .header-inner { flex-direction: row; text-align: left; max-width: 1240px; margin: 0 auto; gap: 20px; }
+      .site-header { padding: 26px 32px; }
       .brand-logo { height: 62px; width: 62px; }
-      .brand-title { font-size: 1.6rem; }
-      .header-actions { position: static; flex-direction: row; margin-left: auto; align-items: center; }
-      .admin-toggle { font-size: 0.85rem; padding: 9px 16px; }
-
-      .nav-container { max-width: 1240px; margin: 0 auto; padding: 24px 32px 12px; }
-      .view-panel { max-width: 1240px; margin: 0 auto; padding: 0 32px; }
-      .nav-tabs { max-width: 480px; }
-
-      /* Ricerca e filtri sulla stessa riga */
-      .toolbar { flex-direction: row; align-items: center; gap: 16px; margin-bottom: 24px; }
-      .toolbar .search-box { margin-bottom: 0; flex: 0 0 300px; }
-      .toolbar .filter-tags { margin-bottom: 0; flex: 1; flex-wrap: wrap; overflow: visible; }
-
-      #songsList, #audioList { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
-      #setlistBody { grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); }
-
-      .header-bar { padding: 22px 26px; }
-      .liturgy-title { font-size: 1.35rem; }
-      .update-bar { max-width: 640px; }
+      .brand-title { font-size: 1.8rem; }
+      .nav-inner { padding: 0 26px; }
+      .view-panel { padding: 30px 32px 0; }
+      .liturgy-title { font-size: 2.3rem; }
+      .liturgy-head { padding-left: 22px; }
+      .grid { grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 16px; }
+      .toolbar { flex-direction: row; align-items: center; gap: 16px; }
+      .toolbar .search-wrap { flex: 0 0 310px; }
+      .toolbar .filter-tags { flex: 1; flex-wrap: wrap; overflow: visible; }
     }
 
-    /* Il visualizzatore diventa una finestra centrata invece che a pieno schermo */
     @media (min-width: 900px) {
-      #pdfViewer { background: rgba(15, 23, 42, .72); padding: 30px; }
-      .pdf-shell { max-width: 1040px; margin: 0 auto; border-radius: 16px; overflow: hidden; box-shadow: 0 24px 60px rgba(0,0,0,.42); }
+      #pdfViewer { background: rgba(28,27,25,.75); padding: 30px; }
+      .pdf-shell { max-width: 1000px; margin: 0 auto; border-radius: var(--radius); overflow: hidden; box-shadow: 0 24px 60px rgba(0,0,0,.4); }
     }
 
-    @media (min-width: 1400px) {
-      .header-inner, .nav-container, .view-panel { max-width: 1400px; }
+    @media (min-width: 1280px) {
+      .header-inner, .nav-inner, .view-panel { max-width: 1280px; }
     }
-
-    /* --- TOAST --- */
-    #toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%) translateY(200%); background: var(--text); color: #fff; padding: 14px 20px; border-radius: 12px; font-weight: 600; font-size: 0.9rem; box-shadow: 0 8px 24px rgba(0,0,0,0.25); z-index: 999; transition: transform 0.25s ease; max-width: 90vw; text-align: center; white-space: pre-line; }
-    #toast.show { transform: translateX(-50%) translateY(0); }
-    #toast.error { background: var(--danger); }
-    #toast.ok { background: var(--success); }
   </style>
 </head>
 <body>
 
-  <header>
+  <header class="site-header">
     <div class="header-inner">
-      <img id="mainLogo" class="brand-logo" style="display:none;" alt="Logo del coro">
-      <h1 class="brand-title" id="mainTitle">Caricamento…</h1>
+      <img id="mainLogo" class="brand-logo" style="display:none" alt="">
+      <div class="brand">
+        <h1 class="brand-title" id="mainTitle">Portale dei canti</h1>
+      </div>
       <div class="header-actions">
-        <button class="admin-toggle" id="adminToggleBtn">⚙️ Admin</button>
-        <button class="admin-toggle btn-sync admin-only" id="syncBtn">🔄 Sincronizza</button>
+        <button class="ghost-btn" id="adminToggleBtn">
+          <span data-icon="chiave"></span><span class="label">Admin</span>
+        </button>
+        <button class="ghost-btn admin-only" id="syncBtn">
+          <span data-icon="sync"></span><span class="label">Sincronizza</span>
+        </button>
       </div>
     </div>
   </header>
 
-  <div class="nav-container">
-    <div class="nav-tabs">
-      <button class="tab-btn active" data-tab="setlistTab">📍 Scaletta</button>
-      <button class="tab-btn" data-tab="archiveTab">🎵 Spartiti</button>
-      <button class="tab-btn" data-tab="audioTab">🎧 Audio</button>
+  <div class="nav-wrap">
+    <div class="nav-inner">
+      <button class="tab-btn active" data-tab="setlistTab"><span data-icon="scaletta"></span>Scaletta</button>
+      <button class="tab-btn" data-tab="archiveTab"><span data-icon="spartiti"></span>Spartiti</button>
+      <button class="tab-btn" data-tab="audioTab"><span data-icon="audio"></span>Audio</button>
     </div>
   </div>
 
-  <!-- TAB 1: SCALETTA -->
-  <div id="setlistTab" class="view-panel active">
-    <div class="header-bar">
-      <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
-        <div class="liturgy-title" id="liturgyTitle">Caricamento…</div>
-        <button class="btn-danger admin-only" id="clearSetlistBtn" style="border:none; border-radius:8px; padding:6px 12px; font-weight:bold; cursor:pointer;">Svuota</button>
+  <!-- SCALETTA -->
+  <section id="setlistTab" class="view-panel active">
+    <div class="liturgy-head">
+      <h2 class="liturgy-title" id="liturgyTitle">Caricamento…</h2>
+      <div class="liturgy-meta" id="setlistUpdate" hidden></div>
+      <div class="liturgy-tools">
+        <button class="btn btn-paper" id="downloadSetlistBtn" hidden>
+          <span data-icon="pdf"></span>Scarica la scaletta
+        </button>
+        <button class="btn btn-quiet admin-only" id="editTitleBtn">Modifica data</button>
+        <button class="btn btn-danger admin-only" id="clearSetlistBtn">Svuota</button>
       </div>
-      <div class="setlist-update" id="setlistUpdate" hidden></div>
-      <button class="btn-pdf" id="downloadSetlistBtn" hidden>📄 Scarica la scaletta in PDF</button>
-      <button class="btn-edit-title admin-only" id="editTitleBtn">✏️ Modifica data</button>
     </div>
-    <div id="setlistBody"><div class="empty-state">Caricamento scaletta…</div></div>
-  </div>
+    <ol class="spine" id="setlistBody"><li class="empty-state">Caricamento…</li></ol>
+  </section>
 
-  <!-- TAB 2: SPARTITI -->
-  <div id="archiveTab" class="view-panel">
+  <!-- SPARTITI -->
+  <section id="archiveTab" class="view-panel">
     <div class="update-bar" id="songsUpdate" hidden></div>
     <div class="toolbar">
-      <input type="text" id="searchInput" class="search-box" placeholder="🔍 Cerca spartito…">
+      <div class="search-wrap">
+        <span data-icon="cerca"></span>
+        <input type="text" id="searchInput" class="search-box" placeholder="Cerca per titolo, momento o tonalità">
+      </div>
       <div class="filter-tags" id="tagFilters"></div>
     </div>
-    <div id="songsList"><div class="empty-state">Caricamento archivio spartiti…</div></div>
-  </div>
+    <div class="grid" id="songsList"><div class="empty-state">Caricamento…</div></div>
+  </section>
 
-  <!-- TAB 3: AUDIO -->
-  <div id="audioTab" class="view-panel">
+  <!-- AUDIO -->
+  <section id="audioTab" class="view-panel">
     <div class="update-bar" id="audiosUpdate" hidden></div>
     <div class="toolbar">
-      <input type="text" id="searchAudioInput" class="search-box" placeholder="🔍 Cerca audio o data…">
+      <div class="search-wrap">
+        <span data-icon="cerca"></span>
+        <input type="text" id="searchAudioInput" class="search-box" placeholder="Cerca per nome o data">
+      </div>
       <div class="filter-tags" id="audioTagFilters"></div>
     </div>
-    <div id="audioList"><div class="empty-state">Caricamento registrazioni audio…</div></div>
-  </div>
+    <div class="grid" id="audioList"><div class="empty-state">Caricamento…</div></div>
+  </section>
 
-  <!-- VISUALIZZATORE PDF (resta dentro il sito, non apre l'app Drive) -->
   <div id="pdfViewer" hidden role="dialog" aria-modal="true" aria-label="Spartito">
     <div class="pdf-shell">
       <div class="pdf-bar">
-        <button id="pdfClose" aria-label="Chiudi">✕</button>
+        <button id="pdfClose" aria-label="Chiudi"><span data-icon="chiudi"></span></button>
         <div class="pdf-bar-title" id="pdfTitle"></div>
-        <a id="pdfDownload" href="#" target="_blank" rel="noopener">⬇️ Salva</a>
+        <a id="pdfDownload" href="#" target="_blank" rel="noopener"><span data-icon="scarica"></span>Salva</a>
       </div>
       <iframe id="pdfFrame" title="Spartito" allow="autoplay"></iframe>
     </div>
@@ -276,37 +506,63 @@
 
   <script>
   /* ==========================================================
-     1) INCOLLA QUI L'URL DELLA TUA WEB APP (quello che finisce con /exec)
+     INCOLLA QUI L'URL DELLA WEB APP (quello che finisce con /exec)
      ========================================================== */
   const API_URL = "https://script.google.com/macros/s/AKfycby5l58Bwdcw2Ok4OnLovCqds1Iev_5bHCEA3gky6nwTtoNqwk6CvZ72JO7f_ZlZZRbr/exec";
   /* ========================================================== */
 
   const AUDIO_TAGS = ["Tutti", "Messa", "Prove", "Audio_guida"];
+  const GIORNI_NOVITA = 14;
 
   let appData = { songs: [], audios: [], setlist: [], momenti: [], liturgyTitle: "", choirName: "", logoUrl: "" };
   let activeTag = "Tutti";
   let activeAudioTag = "Tutti";
   let adminToken = sessionStorage.getItem('coroAdminPwd') || "";
+  let inSetlist = new Map();   // id del file -> momento
 
-  /* ---------- API ---------- */
-  // Chiamata anonima: nessun cookie viene inviato, quindi il bug
-  // multi-account di Google non si presenta mai.
+  /* ---------- Icone ----------
+     Disegnate a mano invece che con le emoji, che cambiano
+     aspetto su ogni sistema operativo. */
+  const ICONS = {
+    scaletta: '<path d="M4 6h1.5M4 12h1.5M4 18h1.5M9 6h11M9 12h11M9 18h11"/>',
+    spartiti: '<path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4"/><path d="M10.5 17.2a1.6 1.6 0 1 0 3.2 0V11l2.3-.8"/>',
+    audio:    '<path d="M4 10.5v3M8 7.5v9M12 4.5v15M16 8.5v7M20 11v2"/>',
+    apri:     '<path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4"/><path d="M9.5 13h5M9.5 17h3.5"/>',
+    scarica:  '<path d="M12 4v11"/><path d="m7.6 10.6 4.4 4.4 4.4-4.4"/><path d="M5 19.5h14"/>',
+    chiudi:   '<path d="m6 6 12 12M18 6 6 18"/>',
+    sync:     '<path d="M20 12a8 8 0 1 1-2.4-5.7"/><path d="M20 3.5v5h-5"/>',
+    chiave:   '<circle cx="8.5" cy="14.5" r="3.8"/><path d="m11.4 11.6 7.6-7.6M16.8 6.2l2 2M14.8 8.2l2 2"/>',
+    cerca:    '<circle cx="11" cy="11" r="6.2"/><path d="m20 20-4.6-4.6"/>',
+    pdf:      '<path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4"/><path d="M12 10.5v6"/><path d="m9.6 14.1 2.4 2.4 2.4-2.4"/>',
+    piu:      '<path d="M12 5.5v13M5.5 12h13"/>',
+    rimuovi:  '<path d="m7 7 10 10M17 7 7 17"/>',
+    stella:   '<path d="M12 4.5 13.7 10l5.3 1.8-5.3 1.8L12 19.5l-1.7-5.9L5 11.8 10.3 10z"/>'
+  };
+  function icon(name, size) {
+    return '<svg class="icon" width="' + (size || 19) + '" height="' + (size || 19) + '" viewBox="0 0 24 24" ' +
+      'fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round" ' +
+      'aria-hidden="true">' + (ICONS[name] || '') + '</svg>';
+  }
+  function paintIcons(root) {
+    (root || document).querySelectorAll('[data-icon]').forEach(el => {
+      el.outerHTML = icon(el.dataset.icon, el.dataset.size);
+    });
+  }
+
+  /* ---------- API ----------
+     Chiamata anonima: senza cookie il bug multi-account non si presenta. */
   async function api(action, params = {}) {
     const url = new URL(API_URL);
     url.searchParams.set('action', action);
     Object.keys(params).forEach(k => url.searchParams.set(k, params[k]));
-
     const res = await fetch(url.toString(), {
-      method: 'GET',
-      redirect: 'follow',
-      credentials: 'omit',
-      cache: 'no-store'
+      method: 'GET', redirect: 'follow', credentials: 'omit', cache: 'no-store'
     });
     if (!res.ok) throw new Error('Il server ha risposto ' + res.status);
     return res.json();
   }
 
-  /* ---------- UI helpers ---------- */
+  /* ---------- Utilità ---------- */
   function esc(s) {
     return String(s == null ? '' : s)
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -319,222 +575,13 @@
     el.textContent = msg;
     el.className = 'show' + (kind ? ' ' + kind : '');
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => { el.className = ''; }, 3500);
-  }
-
-  /* ---------- Visualizzatore PDF ---------- */
-  // Lo spartito si apre dentro il sito. I link drive.google.com/file/...
-  // vengono dirottati sull'app Drive dai telefoni: qui non succede, perché
-  // l'anteprima vive in un iframe e non è una navigazione.
-  function openPdf(fileId, title, downloadUrl) {
-    if (!fileId) { window.open(downloadUrl, '_blank', 'noopener'); return; }
-    document.getElementById('pdfTitle').textContent = title;
-    document.getElementById('pdfDownload').href = downloadUrl;
-    document.getElementById('pdfFrame').src = `https://drive.google.com/file/d/${fileId}/preview`;
-    document.getElementById('pdfViewer').hidden = false;
-    document.body.classList.add('viewer-open');
-  }
-
-  function closePdf() {
-    document.getElementById('pdfViewer').hidden = true;
-    document.getElementById('pdfFrame').src = '';   // ferma il caricamento
-    document.body.classList.remove('viewer-open');
-  }
-
-  /** Badge dei momenti liturgici a cui un canto è assegnato. */
-  function momentoBadges(tags) {
-    const real = tags.filter(t => t && t.toLowerCase() !== 'tutti');
-    if (real.length) {
-      return real.map(t => `<span class="card-badge card-badge-tag">${esc(t)}</span>`).join('');
-    }
-    return '<span class="card-badge card-badge-all">Ogni momento</span>';
-  }
-
-  /* ---------- Avvisi di aggiornamento ---------- */
-  const GIORNI_NOVITA = 14;   // per quanti giorni un aggiornamento resta "nuovo"
-
-  /** "20/08/2026 18:30" -> millisecondi. Restituisce 0 se non riconosciuto. */
-  function parseStamp(s) {
-    const m = String(s || '').match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})(?:[ T](\d{1,2}):(\d{2}))?/);
-    if (!m) return 0;
-    let y = +m[3]; if (y < 100) y += 2000;
-    return new Date(y, +m[2] - 1, +m[1], +(m[4] || 0), +(m[5] || 0)).getTime();
-  }
-
-  /** "oggi", "ieri", "3 giorni fa", oppure la data secca. */
-  function quando(ts, testo) {
-    if (!ts) return testo;
-    const oggi = new Date(); oggi.setHours(0, 0, 0, 0);
-    const quel = new Date(ts); quel.setHours(0, 0, 0, 0);
-    const giorni = Math.round((oggi - quel) / 86400000);
-    if (giorni <= 0) return "oggi";
-    if (giorni === 1) return "ieri";
-    if (giorni < 7) return giorni + " giorni fa";
-    return "il " + testo.split(' ')[0];
-  }
-
-  function giorniDa(ts) {
-    return ts ? (Date.now() - ts) / 86400000 : 9999;
-  }
-
-  function renderUpdateBar(elId, info, singolare, plurale) {
-    const el = document.getElementById(elId);
-    const ts = parseStamp(info && info.date);
-    if (!ts) { el.hidden = true; return; }
-
-    const recente = giorniDa(ts) <= GIORNI_NOVITA;
-    const n = (info.count || 0);
-
-    if (recente && n > 0) {
-      el.className = 'update-bar fresh';
-      el.textContent = `🆕 ${n} ${n === 1 ? singolare : plurale} ${quando(ts, info.date)}`;
-    } else {
-      el.className = 'update-bar old';
-      el.textContent = `Ultimo aggiornamento dell'archivio: ${info.date}`;
-    }
-    el.hidden = false;
-  }
-
-  function renderSetlistUpdate(info) {
-    const el = document.getElementById('setlistUpdate');
-    const ts = parseStamp(info && info.date);
-    if (!ts) { el.hidden = true; return; }
-    const recente = giorniDa(ts) <= GIORNI_NOVITA;
-    el.textContent = (recente ? '✨ Scaletta aggiornata ' : 'Aggiornata ') + quando(ts, info.date);
-    el.hidden = false;
-  }
-
-  /* ---------- PDF della scaletta ---------- */
-  // La libreria viene scaricata solo al primo clic: così la pagina resta
-  // leggera per chi non usa questa funzione.
-  const JSPDF_URL = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
-  let jsPdfLoader = null;
-
-  function loadJsPdf() {
-    if (jsPdfLoader) return jsPdfLoader;
-    jsPdfLoader = new Promise((resolve, reject) => {
-      const s = document.createElement('script');
-      s.src = JSPDF_URL;
-      s.onload = () => {
-        if (window.jspdf && window.jspdf.jsPDF) resolve(window.jspdf.jsPDF);
-        else reject(new Error('libreria non valida'));
-      };
-      s.onerror = () => { jsPdfLoader = null; reject(new Error('libreria non raggiungibile')); };
-      document.head.appendChild(s);
-    });
-    return jsPdfLoader;
-  }
-
-  function nomeFile() {
-    const base = (appData.liturgyTitle || 'scaletta')
-      .replace(/[^\p{L}\p{N}]+/gu, '_').replace(/^_+|_+$/g, '');
-    return `Scaletta_${base || 'coro'}.pdf`;
-  }
-
-  async function downloadSetlistPdf() {
-    if (!appData.setlist.length) return;
-    const btn = document.getElementById('downloadSetlistBtn');
-    const label = btn.textContent;
-    btn.textContent = '⏳ Preparo il PDF…';
-    btn.disabled = true;
-
-    try {
-      const JsPDF = await loadJsPdf();
-      const doc = new JsPDF({ unit: 'mm', format: 'a4' });
-      const W = 210, M = 18;
-      let y = 26;
-
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(17);
-      doc.setTextColor(15, 23, 42);
-      doc.text(appData.choirName || 'Coro', W / 2, y, { align: 'center' });
-
-      y += 8;
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(11.5);
-      doc.setTextColor(71, 85, 105);
-      doc.text(appData.liturgyTitle || '', W / 2, y, { align: 'center' });
-
-      y += 7;
-      doc.setDrawColor(203, 213, 225);
-      doc.line(M, y, W - M, y);
-      y += 13;
-
-      appData.setlist.forEach(item => {
-        if (y > 258) { doc.addPage(); y = 26; }
-
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(9);
-        doc.setTextColor(37, 99, 235);
-        doc.text(item.momento.toUpperCase(), M, y);
-
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(13.5);
-        doc.setTextColor(15, 23, 42);
-        const righe = doc.splitTextToSize(item.title, W - M * 2 - 30);
-        doc.text(righe, M, y + 7);
-
-        if (item.tonality) {
-          doc.setFont('helvetica', 'normal');
-          doc.setFontSize(10);
-          doc.setTextColor(100, 116, 139);
-          doc.text('Tonalità: ' + item.tonality, W - M, y + 7, { align: 'right' });
-        }
-
-        y += 7 + righe.length * 6 + 8;
-        doc.setDrawColor(226, 232, 240);
-        doc.line(M, y - 5, W - M, y - 5);
-      });
-
-      // Piè di pagina su ogni pagina
-      const pagine = doc.getNumberOfPages();
-      for (let p = 1; p <= pagine; p++) {
-        doc.setPage(p);
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(8.5);
-        doc.setTextColor(148, 163, 184);
-        const oggi = new Date().toLocaleDateString('it-CH');
-        const num = pagine > 1 ? `  ·  ${p}/${pagine}` : '';
-        doc.text(`Generato il ${oggi}${num}`, W / 2, 288, { align: 'center' });
-      }
-
-      doc.save(nomeFile());
-    } catch (err) {
-      stampaScaletta();
-    }
-
-    btn.textContent = label;
-    btn.disabled = false;
-  }
-
-  /** Se la libreria non si carica (rete assente, blocco aziendale) si usa la stampa. */
-  function stampaScaletta() {
-    toast('Uso la stampa del browser: scegli "Salva come PDF".');
-    const righe = appData.setlist.map(i =>
-      `<tr><td class="m">${esc(i.momento)}</td><td>${esc(i.title)}</td><td class="t">${esc(i.tonality || '')}</td></tr>`
-    ).join('');
-    const w = window.open('', '_blank');
-    if (!w) { toast('Consenti le finestre pop-up per stampare.', 'error'); return; }
-    w.document.write(`<!doctype html><html lang="it"><head><meta charset="utf-8">
-      <title>${esc(nomeFile().replace(/\.pdf$/, ''))}</title><style>
-      body{font-family:Helvetica,Arial,sans-serif;padding:32px;color:#0f172a}
-      h1{font-size:20px;margin:0;text-align:center}
-      h2{font-size:13px;font-weight:400;color:#475569;margin:6px 0 22px;text-align:center}
-      table{width:100%;border-collapse:collapse}
-      td{padding:11px 4px;border-bottom:1px solid #e2e8f0;font-size:14px;font-weight:700}
-      td.m{width:140px;font-size:10px;color:#2563eb;text-transform:uppercase;letter-spacing:.5px}
-      td.t{width:95px;text-align:right;font-weight:400;color:#64748b;font-size:12px}
-      </style></head><body>
-      <h1>${esc(appData.choirName)}</h1><h2>${esc(appData.liturgyTitle)}</h2>
-      <table>${righe}</table></body></html>`);
-    w.document.close();
-    w.focus();
-    setTimeout(() => w.print(), 500);
+    toastTimer = setTimeout(() => { el.className = ''; }, 3600);
   }
 
   function setAdmin(on) {
     document.body.classList.toggle('is-admin', on);
-    document.getElementById('adminToggleBtn').textContent = on ? "🔓 Esci Admin" : "⚙️ Admin";
+    const btn = document.getElementById('adminToggleBtn');
+    btn.innerHTML = icon('chiave') + '<span class="label">' + (on ? 'Esci' : 'Admin') + '</span>';
   }
 
   /* ---------- Caricamento ---------- */
@@ -544,30 +591,76 @@
       if (!res.success) throw new Error(res.msg || 'Risposta non valida');
       renderApp(res.data);
     } catch (err) {
-      document.getElementById('mainTitle').textContent = "Portale Canti";
       document.getElementById('setlistBody').innerHTML =
-        '<div class="empty-state">Non riesco a contattare il server.<br>Controlla la connessione e ricarica la pagina.<br><br><small>' + esc(err.message) + '</small></div>';
+        '<li class="empty-state">Non riesco a contattare il server.<br>Controlla la connessione e ricarica la pagina.</li>';
+      toast('Connessione non riuscita: ' + err.message, 'error');
     }
   }
 
   function renderApp(data) {
     appData = data;
-
     document.getElementById('mainTitle').textContent = data.choirName;
-    const logoImg = document.getElementById('mainLogo');
-    if (data.logoUrl) { logoImg.src = data.logoUrl; logoImg.style.display = 'block'; }
-    else { logoImg.style.display = 'none'; }
+
+    const logo = document.getElementById('mainLogo');
+    if (data.logoUrl) { logo.src = data.logoUrl; logo.style.display = 'block'; }
+    else { logo.style.display = 'none'; }
+
     document.getElementById('liturgyTitle').textContent = data.liturgyTitle;
+
+    inSetlist = new Map(data.setlist.filter(i => i.fileId).map(i => [i.fileId, i.momento]));
 
     const upd = data.updates || {};
     renderSetlistUpdate(upd.setlist);
-    renderUpdateBar('songsUpdate', upd.songs, 'nuovo spartito aggiunto', 'nuovi spartiti aggiunti');
-    renderUpdateBar('audiosUpdate', upd.audios, 'nuova registrazione aggiunta', 'nuove registrazioni aggiunte');
+    renderUpdateBar('songsUpdate', upd.songs, 'nuovo spartito', 'nuovi spartiti');
+    renderUpdateBar('audiosUpdate', upd.audios, 'nuova registrazione', 'nuove registrazioni');
 
     renderSetlist();
     renderTagFilters();
     applyFilters();
     applyAudioFilters();
+  }
+
+  /* ---------- Avvisi di aggiornamento ---------- */
+  function parseStamp(s) {
+    const m = String(s || '').match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})(?:[ T](\d{1,2}):(\d{2}))?/);
+    if (!m) return 0;
+    let y = +m[3]; if (y < 100) y += 2000;
+    return new Date(y, +m[2] - 1, +m[1], +(m[4] || 0), +(m[5] || 0)).getTime();
+  }
+  function quando(ts, testo) {
+    if (!ts) return testo;
+    const oggi = new Date(); oggi.setHours(0, 0, 0, 0);
+    const quel = new Date(ts); quel.setHours(0, 0, 0, 0);
+    const g = Math.round((oggi - quel) / 86400000);
+    if (g <= 0) return 'oggi';
+    if (g === 1) return 'ieri';
+    if (g < 7) return g + ' giorni fa';
+    return 'il ' + String(testo).split(' ')[0];
+  }
+  function giorniDa(ts) { return ts ? (Date.now() - ts) / 86400000 : 9999; }
+
+  function renderUpdateBar(elId, info, singolare, plurale) {
+    const el = document.getElementById(elId);
+    const ts = parseStamp(info && info.date);
+    if (!ts) { el.hidden = true; return; }
+    const n = info.count || 0;
+    if (giorniDa(ts) <= GIORNI_NOVITA && n > 0) {
+      el.className = 'update-bar fresh';
+      el.innerHTML = icon('stella', 17) + '<span>' + n + ' ' + (n === 1 ? singolare : plurale) +
+                     ' ' + esc(quando(ts, info.date)) + '</span>';
+    } else {
+      el.className = 'update-bar old';
+      el.innerHTML = '<span>Ultimo aggiornamento dell\'archivio: ' + esc(info.date) + '</span>';
+    }
+    el.hidden = false;
+  }
+
+  function renderSetlistUpdate(info) {
+    const el = document.getElementById('setlistUpdate');
+    const ts = parseStamp(info && info.date);
+    if (!ts) { el.hidden = true; return; }
+    el.textContent = 'Aggiornata ' + quando(ts, info.date);
+    el.hidden = false;
   }
 
   /* ---------- Scaletta ---------- */
@@ -577,26 +670,30 @@
     document.getElementById('downloadSetlistBtn').hidden = !appData.setlist.length;
 
     if (!appData.setlist.length) {
-      body.innerHTML = '<div class="empty-state">Nessun canto in scaletta.<br>L\'organista la prepara prima della messa.</div>';
+      body.innerHTML = '<li class="empty-state">Nessun canto in scaletta.<br>Verrà preparata prima della celebrazione.</li>';
       return;
     }
 
     appData.setlist.forEach(item => {
-      const card = document.createElement('div');
-      card.className = 'card';
-      card.innerHTML = `
-        <div><span class="card-badge-momento">${esc(item.momento)}</span></div>
-        <div class="card-title">${esc(item.title)}</div>
-        ${item.tonality ? `<div class="badge-group"><span class="card-badge">Tonalità: ${esc(item.tonality)}</span></div>` : ''}
-        <div class="card-actions">
-          <button class="btn btn-view js-open">📄 Apri spartito</button>
-          <a href="${esc(item.downloadUrl)}" target="_blank" rel="noopener" class="btn btn-down">⬇️ Salva</a>
-          <button class="btn btn-danger admin-only js-remove" title="Rimuovi">✕</button>
-        </div>`;
-      card.querySelector('.js-open').addEventListener('click',
+      const li = document.createElement('li');
+      li.className = 'stop';
+      li.innerHTML =
+        '<span class="stop-dot"></span>' +
+        '<div class="stop-body">' +
+          '<span class="eyebrow">' + esc(item.momento) + '</span>' +
+          '<h3 class="stop-title">' + esc(item.title) + '</h3>' +
+          (item.tonality ? '<div class="stop-key">Tonalità ' + esc(item.tonality) + '</div>' : '') +
+          '<div class="stop-actions">' +
+            '<button class="btn js-open">' + icon('apri') + 'Apri spartito</button>' +
+            '<a href="' + esc(item.downloadUrl) + '" target="_blank" rel="noopener" class="btn btn-primary">' +
+              icon('scarica') + 'Salva</a>' +
+            '<button class="btn btn-danger admin-only js-remove" aria-label="Rimuovi">' + icon('rimuovi') + '</button>' +
+          '</div>' +
+        '</div>';
+      li.querySelector('.js-open').addEventListener('click',
         () => openPdf(item.fileId, item.title, item.downloadUrl));
-      card.querySelector('.js-remove').addEventListener('click', () => removeSong(item.momento));
-      body.appendChild(card);
+      li.querySelector('.js-remove').addEventListener('click', () => removeSong(item.momento));
+      body.appendChild(li);
     });
   }
 
@@ -618,46 +715,55 @@
     });
   }
 
+  function momentoTags(tags) {
+    const veri = tags.filter(t => t && t.toLowerCase() !== 'tutti');
+    if (veri.length) return veri.map(t => '<span class="tag">' + esc(t) + '</span>').join('');
+    return '<span class="tag tag-any">Ogni momento</span>';
+  }
+
   function applyFilters() {
-    const q = document.getElementById('searchInput').value.toLowerCase();
+    const q = document.getElementById('searchInput').value.toLowerCase().trim();
     const container = document.getElementById('songsList');
     container.innerHTML = '';
 
-    const filtered = appData.songs.filter(s =>
-      s.title.toLowerCase().includes(q) &&
-      (activeTag === 'Tutti' || s.tags.includes(activeTag) || s.tags.includes('Tutti'))
-    );
+    // La ricerca guarda titolo, momenti e tonalità insieme
+    const filtered = appData.songs.filter(s => {
+      const testo = (s.title + ' ' + s.tags.join(' ') + ' ' + s.tonality).toLowerCase();
+      const okQuery = !q || testo.includes(q);
+      const okTag = activeTag === 'Tutti' || s.tags.includes(activeTag) || s.tags.includes('Tutti');
+      return okQuery && okTag;
+    });
 
     if (!filtered.length) {
-      container.innerHTML = '<div class="empty-state">Nessun canto trovato. Prova con un altro termine.</div>';
+      container.innerHTML = '<div class="empty-state">Nessun canto trovato.</div>';
       return;
     }
 
     const optionsHtml = appData.momenti
-      .map(m => `<option value="${esc(m)}">${esc(m)}</option>`).join('');
+      .map(m => '<option value="' + esc(m) + '">' + esc(m) + '</option>').join('');
 
     filtered.forEach(s => {
-      const card = document.createElement('div');
+      const momento = inSetlist.get(s.id);
+      const card = document.createElement('article');
       card.className = 'card';
-      card.innerHTML = `
-        <div class="card-title">${esc(s.title)}</div>
-        <div class="badge-group">
-          ${momentoBadges(s.tags)}
-          ${s.tonality ? `<span class="card-badge">Tonalità: ${esc(s.tonality)}</span>` : ''}
-        </div>
-        <div class="card-actions">
-          <button class="btn btn-view js-open">📄 Apri</button>
-          <a href="${esc(s.downloadUrl)}" target="_blank" rel="noopener" class="btn btn-down">⬇️ Salva</a>
-        </div>
-        <div class="admin-box">
-          <select class="js-momento">${optionsHtml}</select>
-          <button class="btn-admin js-add">➕ Aggiungi</button>
-        </div>`;
-      card.querySelector('.js-open').addEventListener('click',
-        () => openPdf(s.id, s.title, s.downloadUrl));
-      card.querySelector('.js-add').addEventListener('click', () => {
-        addToSetlist(s.id, card.querySelector('.js-momento').value);
-      });
+      card.innerHTML =
+        (momento ? '<span class="in-setlist">In scaletta · ' + esc(momento) + '</span>' : '') +
+        '<h3 class="card-title">' + esc(s.title) + '</h3>' +
+        '<div class="tags">' + momentoTags(s.tags) +
+          (s.tonality ? '<span class="tag tag-key">Tonalità ' + esc(s.tonality) + '</span>' : '') +
+        '</div>' +
+        '<div class="card-actions">' +
+          '<button class="btn js-open">' + icon('apri') + 'Apri</button>' +
+          '<a href="' + esc(s.downloadUrl) + '" target="_blank" rel="noopener" class="btn btn-primary">' +
+            icon('scarica') + 'Salva</a>' +
+        '</div>' +
+        '<div class="admin-box">' +
+          '<select class="js-momento">' + optionsHtml + '</select>' +
+          '<button class="btn js-add">' + icon('piu') + 'Aggiungi</button>' +
+        '</div>';
+      card.querySelector('.js-open').addEventListener('click', () => openPdf(s.id, s.title, s.downloadUrl));
+      card.querySelector('.js-add').addEventListener('click',
+        () => addToSetlist(s.id, card.querySelector('.js-momento').value));
       container.appendChild(card);
     });
   }
@@ -681,14 +787,16 @@
   }
 
   function applyAudioFilters() {
-    const q = document.getElementById('searchAudioInput').value.toLowerCase();
+    const q = document.getElementById('searchAudioInput').value.toLowerCase().trim();
     const container = document.getElementById('audioList');
     container.innerHTML = '';
 
-    const filtered = appData.audios.filter(a =>
-      (a.title.toLowerCase().includes(q) || a.recordDate.toLowerCase().includes(q)) &&
-      (activeAudioTag === 'Tutti' || a.tags.includes(activeAudioTag))
-    );
+    const filtered = appData.audios.filter(a => {
+      const testo = (a.title + ' ' + a.tags.join(' ') + ' ' + a.recordDate).toLowerCase();
+      const okQuery = !q || testo.includes(q);
+      const okTag = activeAudioTag === 'Tutti' || a.tags.includes(activeAudioTag);
+      return okQuery && okTag;
+    });
 
     if (!filtered.length) {
       container.innerHTML = '<div class="empty-state">Nessuna registrazione trovata.</div>';
@@ -696,22 +804,155 @@
     }
 
     filtered.forEach(a => {
-      const card = document.createElement('div');
+      const card = document.createElement('article');
       card.className = 'card';
-      card.innerHTML = `
-        <div class="card-title">${esc(a.title)}</div>
-        <div class="badge-group">
-          <span class="card-badge">${esc(a.tags.join(', ') || 'Audio')}</span>
-          ${a.recordDate ? `<span class="card-badge card-badge-date">📅 ${esc(a.recordDate)}</span>` : ''}
-        </div>
-        <iframe src="https://drive.google.com/file/d/${esc(a.id)}/preview"
-                width="100%" height="80" loading="lazy" allow="autoplay"
-                style="border:none; border-radius:8px; margin: 12px 0;"></iframe>
-        <div class="card-actions">
-          <a href="${esc(a.downloadUrl)}" target="_blank" rel="noopener" class="btn btn-view" style="width:100%;">⬇️ Scarica file audio</a>
-        </div>`;
+      card.innerHTML =
+        '<h3 class="card-title">' + esc(a.title) + '</h3>' +
+        '<div class="tags">' +
+          '<span class="tag">' + esc(a.tags.join(', ') || 'Audio') + '</span>' +
+          (a.recordDate ? '<span class="tag tag-date">' + esc(a.recordDate) + '</span>' : '') +
+        '</div>' +
+        '<iframe src="https://drive.google.com/file/d/' + esc(a.id) + '/preview" width="100%" height="72" ' +
+          'loading="lazy" allow="autoplay" style="border:none;border-radius:9px;margin:6px 0"></iframe>' +
+        '<div class="card-actions">' +
+          '<a href="' + esc(a.downloadUrl) + '" target="_blank" rel="noopener" class="btn">' +
+            icon('scarica') + 'Scarica</a>' +
+        '</div>';
       container.appendChild(card);
     });
+  }
+
+  /* ---------- Lettore dello spartito ---------- */
+  function openPdf(fileId, title, downloadUrl) {
+    if (!fileId) { window.open(downloadUrl, '_blank', 'noopener'); return; }
+    document.getElementById('pdfTitle').textContent = title;
+    document.getElementById('pdfDownload').href = downloadUrl;
+    document.getElementById('pdfFrame').src = 'https://drive.google.com/file/d/' + fileId + '/preview';
+    document.getElementById('pdfViewer').hidden = false;
+    document.body.classList.add('viewer-open');
+  }
+  function closePdf() {
+    document.getElementById('pdfViewer').hidden = true;
+    document.getElementById('pdfFrame').src = '';
+    document.body.classList.remove('viewer-open');
+  }
+
+  /* ---------- PDF della scaletta ---------- */
+  const JSPDF_URL = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+  const ROSSO = [165, 37, 43];
+  const ORO   = [176, 139, 51];
+  let jsPdfLoader = null;
+
+  function loadJsPdf() {
+    if (jsPdfLoader) return jsPdfLoader;
+    jsPdfLoader = new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = JSPDF_URL;
+      s.onload = () => {
+        if (window.jspdf && window.jspdf.jsPDF) resolve(window.jspdf.jsPDF);
+        else reject(new Error('libreria non valida'));
+      };
+      s.onerror = () => { jsPdfLoader = null; reject(new Error('libreria non raggiungibile')); };
+      document.head.appendChild(s);
+    });
+    return jsPdfLoader;
+  }
+
+  function nomeFile() {
+    const base = (appData.liturgyTitle || 'scaletta')
+      .replace(/[^\p{L}\p{N}]+/gu, '_').replace(/^_+|_+$/g, '');
+    return 'Scaletta_' + (base || 'coro') + '.pdf';
+  }
+
+  async function downloadSetlistPdf() {
+    if (!appData.setlist.length) return;
+    const btn = document.getElementById('downloadSetlistBtn');
+    const prima = btn.innerHTML;
+    btn.textContent = 'Preparo il PDF…';
+    btn.disabled = true;
+
+    try {
+      const JsPDF = await loadJsPdf();
+      const doc = new JsPDF({ unit: 'mm', format: 'a4' });
+      const W = 210, M = 20;
+      let y = 28;
+
+      doc.setFont('times', 'bold'); doc.setFontSize(19); doc.setTextColor(27, 26, 23);
+      doc.text(appData.choirName || 'Coro', W / 2, y, { align: 'center' });
+      y += 8;
+
+      doc.setFont('times', 'normal'); doc.setFontSize(13); doc.setTextColor(85, 82, 75);
+      doc.text(appData.liturgyTitle || '', W / 2, y, { align: 'center' });
+      y += 6;
+
+      doc.setDrawColor(ORO[0], ORO[1], ORO[2]); doc.setLineWidth(0.7);
+      doc.line(W / 2 - 16, y, W / 2 + 16, y);
+      y += 15;
+
+      appData.setlist.forEach(item => {
+        if (y > 256) { doc.addPage(); y = 28; }
+
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(8);
+        doc.setTextColor(ROSSO[0], ROSSO[1], ROSSO[2]);
+        doc.text(item.momento.toUpperCase(), M, y, { charSpace: 0.5 });
+
+        doc.setFont('times', 'bold'); doc.setFontSize(15); doc.setTextColor(27, 26, 23);
+        const righe = doc.splitTextToSize(item.title, W - M * 2 - 32);
+        doc.text(righe, M, y + 7.5);
+
+        if (item.tonality) {
+          doc.setFont('times', 'italic'); doc.setFontSize(10.5);
+          doc.setTextColor(120, 116, 108);
+          doc.text('Tonalità ' + item.tonality, W - M, y + 7.5, { align: 'right' });
+        }
+
+        y += 7.5 + righe.length * 6.5 + 8;
+        doc.setDrawColor(226, 223, 215); doc.setLineWidth(0.2);
+        doc.line(M, y - 5, W - M, y - 5);
+      });
+
+      const pagine = doc.getNumberOfPages();
+      for (let p = 1; p <= pagine; p++) {
+        doc.setPage(p);
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(8);
+        doc.setTextColor(150, 146, 138);
+        const oggi = new Date().toLocaleDateString('it-CH');
+        doc.text('Generato il ' + oggi + (pagine > 1 ? '  ·  ' + p + '/' + pagine : ''),
+                 W / 2, 288, { align: 'center' });
+      }
+
+      doc.save(nomeFile());
+    } catch (err) {
+      stampaScaletta();
+    }
+
+    btn.innerHTML = prima;
+    btn.disabled = false;
+  }
+
+  /** Ripiego se la libreria non si carica: stampa del browser. */
+  function stampaScaletta() {
+    toast('Uso la stampa del browser: scegli "Salva come PDF".');
+    const righe = appData.setlist.map(i =>
+      '<tr><td class="m">' + esc(i.momento) + '</td><td>' + esc(i.title) +
+      '</td><td class="t">' + esc(i.tonality || '') + '</td></tr>').join('');
+    const w = window.open('', '_blank');
+    if (!w) { toast('Consenti le finestre pop-up per stampare.', 'error'); return; }
+    w.document.write('<!doctype html><html lang="it"><head><meta charset="utf-8"><title>' +
+      esc(nomeFile().replace(/\.pdf$/, '')) + '</title><style>' +
+      'body{font-family:Georgia,serif;padding:34px;color:#1b1a17}' +
+      'h1{font-size:21px;margin:0;text-align:center}' +
+      'h2{font-size:14px;font-weight:400;color:#55524b;margin:6px 0 24px;text-align:center}' +
+      'table{width:100%;border-collapse:collapse}' +
+      'td{padding:12px 4px;border-bottom:1px solid #e2dfd7;font-size:15px;font-weight:700}' +
+      'td.m{width:140px;font-family:Arial,sans-serif;font-size:9px;letter-spacing:.09em;' +
+      'text-transform:uppercase;color:#a5252b}' +
+      'td.t{width:95px;text-align:right;font-weight:400;font-style:italic;color:#78746c;font-size:12px}' +
+      '</style></head><body><h1>' + esc(appData.choirName) + '</h1><h2>' +
+      esc(appData.liturgyTitle) + '</h2><table>' + righe + '</table></body></html>');
+    w.document.close();
+    w.focus();
+    setTimeout(() => w.print(), 500);
   }
 
   /* ---------- Azioni admin ---------- */
@@ -732,7 +973,7 @@
         adminToken = pwd;
         sessionStorage.setItem('coroAdminPwd', pwd);
         setAdmin(true);
-        toast("Modalità Admin attiva", "ok");
+        toast("Modalità Admin attiva");
       } else {
         toast("Password errata", "error");
       }
@@ -743,55 +984,52 @@
     if (!adminToken) return;
     try {
       const res = await api(action, Object.assign({ pwd: adminToken }, params));
-      if (res.success) {
-        toast(okMsg || res.msg, "ok");
-        await loadData();
-      } else {
-        toast(res.msg || "Operazione non riuscita", "error");
-      }
+      if (res.success) { toast(okMsg || res.msg); await loadData(); }
+      else { toast(res.msg || "Operazione non riuscita", "error"); }
     } catch (e) { toast("Errore di connessione", "error"); }
   }
 
   async function sync() {
     if (!adminToken) return;
     const btn = document.getElementById('syncBtn');
-    const label = btn.textContent;
-    btn.textContent = "⏳ Ricerca…"; btn.disabled = true; btn.style.opacity = "0.7";
+    const prima = btn.innerHTML;
+    btn.textContent = 'Ricerca…';
+    btn.disabled = true;
     try {
       const res = await api('sync', { pwd: adminToken });
-      toast(res.msg, res.success ? "ok" : "error");
+      toast(res.msg, res.success ? null : 'error');
       if (res.success) await loadData();
     } catch (e) { toast("Errore di connessione", "error"); }
-    btn.textContent = label; btn.disabled = false; btn.style.opacity = "1";
+    btn.innerHTML = prima;
+    btn.disabled = false;
   }
 
   function addToSetlist(songId, momento) { run('add', { songId, momento }); }
-
   function removeSong(momento) {
-    if (confirm(`Rimuovere il canto da "${momento}"?`)) run('remove', { momento });
+    if (confirm('Rimuovere il canto da "' + momento + '"?')) run('remove', { momento });
   }
 
   /* ---------- Avvio ---------- */
+  paintIcons();
+
+  document.getElementById('adminToggleBtn').addEventListener('click', login);
+  document.getElementById('syncBtn').addEventListener('click', sync);
+  document.getElementById('downloadSetlistBtn').addEventListener('click', downloadSetlistPdf);
+  document.getElementById('searchInput').addEventListener('input', applyFilters);
+  document.getElementById('searchAudioInput').addEventListener('input', applyAudioFilters);
   document.getElementById('pdfClose').addEventListener('click', closePdf);
   document.getElementById('pdfViewer').addEventListener('click', e => {
-    if (e.target.id === 'pdfViewer') closePdf();   // clic sullo sfondo scuro
+    if (e.target.id === 'pdfViewer') closePdf();
   });
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape' && !document.getElementById('pdfViewer').hidden) closePdf();
   });
-
-  document.getElementById('downloadSetlistBtn').addEventListener('click', downloadSetlistPdf);
-  document.getElementById('adminToggleBtn').addEventListener('click', login);
-  document.getElementById('syncBtn').addEventListener('click', sync);
-  document.getElementById('searchInput').addEventListener('input', applyFilters);
-  document.getElementById('searchAudioInput').addEventListener('input', applyAudioFilters);
 
   document.getElementById('editTitleBtn').addEventListener('click', () => {
     const current = document.getElementById('liturgyTitle').textContent;
     const value = prompt("Intestazione (data / orario):", current);
     if (value && value.trim()) run('title', { value: value.trim() });
   });
-
   document.getElementById('clearSetlistBtn').addEventListener('click', () => {
     if (confirm("Vuoi svuotare tutta la scaletta attiva?")) run('clear', {});
   });
