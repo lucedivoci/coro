@@ -260,6 +260,90 @@
     .card-actions { display: flex; gap: 8px; margin-top: auto; padding-top: 4px; }
     .card-actions .btn { flex: 1; }
 
+    /* ============================================================
+       LETTORE AUDIO — costruito in casa.
+       L'anteprima di Drive cambia aspetto e altezza da un telefono
+       all'altro e finisce tagliata: qui invece l'altezza è nostra
+       e resta identica ovunque.
+       ============================================================ */
+    .player {
+      display: flex; flex-direction: column; gap: 8px;
+      background: var(--surface-2);
+      border: 1px solid var(--rule-soft);
+      border-radius: var(--radius-sm);
+      padding: 11px 12px 9px;
+      margin: 2px 0;
+    }
+    .player-top { display: flex; align-items: center; gap: 11px; }
+    .player-play {
+      flex: 0 0 auto;
+      width: 42px; height: 42px;
+      display: inline-flex; align-items: center; justify-content: center;
+      border: none; border-radius: 50%;
+      background: var(--accent); color: #fff;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .player-play:active { transform: translateY(1px); }
+    .player-play.loading { background: var(--ink-mute); }
+    .player-time {
+      flex: 1; min-width: 0;
+      font-size: 0.84rem; font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      color: var(--ink-soft);
+      white-space: nowrap;
+    }
+    .player-time .sep, .player-time .total { color: var(--ink-mute); font-weight: 500; }
+    .player-rate {
+      flex: 0 0 auto;
+      font-family: inherit; font-size: 0.75rem; font-weight: 700;
+      padding: 6px 10px;
+      border: 1px solid var(--rule); border-radius: 999px;
+      background: var(--surface); color: var(--ink-soft);
+      cursor: pointer;
+      font-variant-numeric: tabular-nums;
+    }
+    .player-rate.on { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+
+    /* La barra: alta 22px per dare al dito un bersaglio comodo,
+       ma il filo colorato ne occupa solo 5. */
+    .player-seek {
+      -webkit-appearance: none; appearance: none;
+      display: block; width: 100%; height: 22px;
+      margin: 0; padding: 0;
+      background: transparent; cursor: pointer;
+    }
+    .player-seek::-webkit-slider-runnable-track {
+      height: 5px; border-radius: 999px;
+      background:
+        linear-gradient(var(--accent), var(--accent)) left center / var(--pct, 0%) 100% no-repeat,
+        var(--rule);
+    }
+    .player-seek::-webkit-slider-thumb {
+      -webkit-appearance: none; appearance: none;
+      width: 15px; height: 15px; margin-top: -5px;
+      border-radius: 50%;
+      background: var(--accent);
+      border: 2px solid var(--surface);
+      box-shadow: 0 1px 3px rgba(0,0,0,.22);
+    }
+    .player-seek::-moz-range-track { height: 5px; border-radius: 999px; background: var(--rule); }
+    .player-seek::-moz-range-progress { height: 5px; border-radius: 999px; background: var(--accent); }
+    .player-seek::-moz-range-thumb {
+      width: 15px; height: 15px; border-radius: 50%;
+      background: var(--accent); border: 2px solid var(--surface);
+    }
+    .player-seek:disabled { opacity: .5; cursor: default; }
+
+    /* Ripiego: se il browser non sa leggere il file (per esempio un .ogg
+       su iPhone) torna l'anteprima di Drive, ma con l'altezza giusta. */
+    .player.is-fallback { padding: 0; background: transparent; border: none; }
+    .player-fallback {
+      display: block; width: 100%; height: 120px;
+      border: 1px solid var(--rule-soft);
+      border-radius: var(--radius-sm);
+    }
+
     .admin-box {
       display: none; gap: 8px;
       border-top: 1px dashed var(--rule);
@@ -534,7 +618,10 @@
     pdf:      '<path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4"/><path d="M12 10.5v6"/><path d="m9.6 14.1 2.4 2.4 2.4-2.4"/>',
     piu:      '<path d="M12 5.5v13M5.5 12h13"/>',
     rimuovi:  '<path d="m7 7 10 10M17 7 7 17"/>',
-    stella:   '<path d="M12 4.5 13.7 10l5.3 1.8-5.3 1.8L12 19.5l-1.7-5.9L5 11.8 10.3 10z"/>'
+    stella:   '<path d="M12 4.5 13.7 10l5.3 1.8-5.3 1.8L12 19.5l-1.7-5.9L5 11.8 10.3 10z"/>',
+    play:     '<path d="M9 6.2 18.2 12 9 17.8z" fill="currentColor"/>',
+    pausa:    '<path d="M9.5 6.2v11.6M14.5 6.2v11.6" stroke-width="2.1"/>',
+    attesa:   '<path d="M12 4.5a7.5 7.5 0 1 0 7.5 7.5" opacity=".9"/>'
   };
   function icon(name, size) {
     return '<svg class="icon" width="' + (size || 19) + '" height="' + (size || 19) + '" viewBox="0 0 24 24" ' +
@@ -781,9 +868,155 @@
     });
   }
 
+  /* ---------- Lettore audio ----------
+     Un solo brano alla volta suona; i metadati si chiedono a Drive
+     solo quando la scheda si avvicina allo schermo. */
+  const RATES = [1, 1.25, 1.5, 0.75];
+  let livePlayers = [];
+  let nowPlaying = null;
+
+  function fmtTime(s) {
+    if (!isFinite(s) || s < 0) return '–:––';
+    const m = Math.floor(s / 60);
+    return m + ':' + String(Math.floor(s % 60)).padStart(2, '0');
+  }
+
+  const metaObserver = ('IntersectionObserver' in window)
+    ? new IntersectionObserver((entries, obs) => {
+        entries.forEach(e => {
+          if (!e.isIntersecting) return;
+          const au = e.target.__audio;
+          if (au && au.preload === 'none') { au.preload = 'metadata'; try { au.load(); } catch (err) {} }
+          obs.unobserve(e.target);
+        });
+      }, { rootMargin: '400px 0px' })
+    : null;
+
+  function stopAllPlayers() {
+    livePlayers.forEach(au => { try { au.pause(); au.removeAttribute('src'); au.load(); } catch (e) {} });
+    livePlayers = [];
+    nowPlaying = null;
+  }
+
+  function buildPlayer(item) {
+    const wrap = document.createElement('div');
+    wrap.className = 'player';
+    wrap.innerHTML =
+      '<div class="player-top">' +
+        '<button class="player-play" type="button" aria-label="Riproduci">' + icon('play', 22) + '</button>' +
+        '<div class="player-time">' +
+          '<span class="cur">0:00</span> <span class="sep">/</span> <span class="total">–:––</span>' +
+        '</div>' +
+        '<button class="player-rate" type="button" aria-label="Velocità di riproduzione">1×</button>' +
+      '</div>' +
+      '<input class="player-seek" type="range" min="0" max="1000" step="1" value="0" disabled ' +
+        'aria-label="Posizione nella registrazione">';
+
+    const btnPlay = wrap.querySelector('.player-play');
+    const btnRate = wrap.querySelector('.player-rate');
+    const seek    = wrap.querySelector('.player-seek');
+    const elCur   = wrap.querySelector('.cur');
+    const elTot   = wrap.querySelector('.total');
+
+    const src = item.streamUrl ||
+      'https://drive.usercontent.google.com/download?id=' + item.id + '&export=download';
+
+    const audio = new Audio();
+    audio.preload = 'none';
+    audio.src = src;
+    wrap.__audio = audio;
+    livePlayers.push(audio);
+    if (metaObserver) metaObserver.observe(wrap); else { audio.preload = 'metadata'; }
+
+    let dragging = false;
+    let rateIdx = 0;
+
+    function setBar(fraction) {
+      const v = Math.max(0, Math.min(1, fraction || 0));
+      seek.value = Math.round(v * 1000);
+      seek.style.setProperty('--pct', (v * 100) + '%');
+    }
+    function setIcon(name) {
+      btnPlay.innerHTML = icon(name, 22);
+      btnPlay.setAttribute('aria-label', name === 'pausa' ? 'Metti in pausa' : 'Riproduci');
+    }
+
+    /* Se il browser non digerisce il formato, non lasciamo la scheda muta:
+       rimettiamo l'anteprima di Drive, che qualsiasi cosa la legge. */
+    let fallenBack = false;
+    function fallback() {
+      if (fallenBack) return;
+      fallenBack = true;
+      try { audio.pause(); } catch (e) {}
+      wrap.classList.add('is-fallback');
+      wrap.innerHTML =
+        '<iframe class="player-fallback" loading="lazy" allow="autoplay" ' +
+          'title="Registrazione ' + esc(item.title) + '" ' +
+          'src="https://drive.google.com/file/d/' + esc(item.id) + '/preview"></iframe>';
+    }
+
+    audio.addEventListener('loadedmetadata', () => {
+      if (isFinite(audio.duration)) { elTot.textContent = fmtTime(audio.duration); seek.disabled = false; }
+    });
+    audio.addEventListener('durationchange', () => {
+      if (isFinite(audio.duration)) { elTot.textContent = fmtTime(audio.duration); seek.disabled = false; }
+    });
+    audio.addEventListener('timeupdate', () => {
+      if (dragging) return;
+      elCur.textContent = fmtTime(audio.currentTime);
+      if (isFinite(audio.duration) && audio.duration > 0) setBar(audio.currentTime / audio.duration);
+    });
+    audio.addEventListener('waiting', () => btnPlay.classList.add('loading'));
+    audio.addEventListener('playing', () => btnPlay.classList.remove('loading'));
+    audio.addEventListener('play', () => {
+      if (nowPlaying && nowPlaying !== audio) { try { nowPlaying.pause(); } catch (e) {} }
+      nowPlaying = audio;
+      setIcon('pausa');
+    });
+    audio.addEventListener('pause', () => { btnPlay.classList.remove('loading'); setIcon('play'); });
+    audio.addEventListener('ended', () => { setIcon('play'); setBar(0); elCur.textContent = '0:00'; });
+    audio.addEventListener('error', fallback);
+
+    btnPlay.addEventListener('click', () => {
+      if (audio.paused) {
+        btnPlay.classList.add('loading');
+        const p = audio.play();
+        if (p && p.catch) p.catch(() => { btnPlay.classList.remove('loading'); fallback(); });
+      } else {
+        audio.pause();
+      }
+    });
+
+    btnRate.addEventListener('click', () => {
+      rateIdx = (rateIdx + 1) % RATES.length;
+      const r = RATES[rateIdx];
+      audio.playbackRate = r;
+      btnRate.textContent = String(r).replace('.', ',') + '×';
+      btnRate.classList.toggle('on', r !== 1);
+    });
+
+    seek.addEventListener('input', () => {
+      dragging = true;
+      const v = seek.value / 1000;
+      seek.style.setProperty('--pct', (v * 100) + '%');
+      if (isFinite(audio.duration)) elCur.textContent = fmtTime(v * audio.duration);
+    });
+    const commit = () => {
+      if (!dragging) return;
+      dragging = false;
+      if (isFinite(audio.duration)) audio.currentTime = (seek.value / 1000) * audio.duration;
+    };
+    seek.addEventListener('change', commit);
+    seek.addEventListener('pointerup', commit);
+
+    setBar(0);
+    return wrap;
+  }
+
   function applyAudioFilters() {
     const q = document.getElementById('searchAudioInput').value.toLowerCase().trim();
     const container = document.getElementById('audioList');
+    stopAllPlayers();
     container.innerHTML = '';
 
     const filtered = appData.audios.filter(a => {
@@ -807,12 +1040,11 @@
           '<span class="tag">' + esc(a.tags.join(', ') || 'Audio') + '</span>' +
           (a.recordDate ? '<span class="tag tag-date">' + esc(a.recordDate) + '</span>' : '') +
         '</div>' +
-        '<iframe src="https://drive.google.com/file/d/' + esc(a.id) + '/preview" width="100%" height="72" ' +
-          'loading="lazy" allow="autoplay" style="border:none;border-radius:9px;margin:6px 0"></iframe>' +
         '<div class="card-actions">' +
           '<a href="' + esc(a.downloadUrl) + '" target="_blank" rel="noopener" class="btn">' +
             icon('scarica') + 'Scarica</a>' +
         '</div>';
+      card.insertBefore(buildPlayer(a), card.querySelector('.card-actions'));
       container.appendChild(card);
     });
   }
