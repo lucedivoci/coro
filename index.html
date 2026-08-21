@@ -484,7 +484,9 @@
     body.is-admin .admin-box { display: flex; }
 
     /* ============================================================
-       LETTORE DELLO SPARTITO
+       OVERLAY DI DRIVE (ripiego audio)
+       Gli spartiti PDF si aprono in una nuova scheda: questo
+       overlay serve solo ai formati audio non riproducibili.
        ============================================================ */
     #pdfViewer { position: fixed; inset: 0; z-index: 400; background: #2A2825; display: flex; }
     #pdfViewer[hidden] { display: none; }
@@ -510,7 +512,6 @@
       cursor: pointer; text-decoration: none; flex: 0 0 auto;
     }
     .pdf-bar button:disabled { opacity: .35; cursor: default; }
-    .pdf-bar .pdf-zoom { padding: 8px 10px; }
 
     /* Sotto i 520px restano solo le icone: il titolo ha bisogno di spazio. */
     @media (max-width: 520px) {
@@ -519,23 +520,13 @@
       .pdf-bar button, .pdf-bar a { padding: 8px 10px; }
     }
 
-    /* Il palco: qui scorrono le pagine disegnate una sotto l'altra. */
+    /* Contiene il messaggio con i pulsanti di ripiego. */
     #pdfStage {
       flex: 1; overflow: auto; background: #3B3833;
       padding: 14px 12px 28px;
       -webkit-overflow-scrolling: touch;
       text-align: center;
     }
-    .pdf-page {
-      display: block; margin: 0 auto 14px;
-      max-width: 100%;
-      background: #fff;
-      box-shadow: 0 4px 16px rgba(0,0,0,.35);
-      border-radius: 3px;
-    }
-    /* Ingrandito oltre la larghezza dello schermo: si scorre anche in orizzontale */
-    #pdfStage.zoomed { text-align: left; }
-    #pdfStage.zoomed .pdf-page { max-width: none; margin-left: 0; margin-right: 0; }
 
     .pdf-note {
       color: #D9D5CD; font-size: 0.9rem; line-height: 1.6;
@@ -552,10 +543,6 @@
       font-size: 0.85rem; font-weight: 600;
     }
     .pdf-note .pdf-actions a.ghost { background: rgba(255,255,255,.13); }
-    .pdf-count {
-      font-size: 0.74rem; color: rgba(241,239,234,.6); font-weight: 600;
-      white-space: nowrap; flex: 0 0 auto;
-    }
     #pdfFrame { flex: 1; width: 100%; border: none; background: #3B3833; }
     #pdfFrame[hidden], #pdfStage[hidden] { display: none; }
     body.viewer-open { overflow: hidden; }
@@ -705,9 +692,6 @@
       <div class="pdf-bar">
         <button id="pdfClose" aria-label="Chiudi"><span data-icon="chiudi"></span></button>
         <div class="pdf-bar-title" id="pdfTitle"></div>
-        <span class="pdf-count" id="pdfCount"></span>
-        <button class="pdf-zoom" id="pdfZoomOut" aria-label="Riduci" disabled><span data-icon="zoomMeno"></span></button>
-        <button class="pdf-zoom" id="pdfZoomIn" aria-label="Ingrandisci" disabled><span data-icon="zoomPiu"></span></button>
         <a id="pdfDownload" href="#" target="_blank" rel="noopener">
           <span data-icon="scarica"></span><span class="label">Salva</span>
         </a>
@@ -804,8 +788,6 @@
     cerca:    '<circle cx="11" cy="11" r="6.2"/><path d="m20 20-4.6-4.6"/>',
     pdf:      '<path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4"/><path d="M12 10.5v6"/><path d="m9.6 14.1 2.4 2.4 2.4-2.4"/>',
     piu:      '<path d="M12 5.5v13M5.5 12h13"/>',
-    zoomPiu:  '<circle cx="10.5" cy="10.5" r="6"/><path d="m19 19-4.4-4.4M10.5 8v5M8 10.5h5"/>',
-    zoomMeno: '<circle cx="10.5" cy="10.5" r="6"/><path d="m19 19-4.4-4.4M8 10.5h5"/>',
     esterno:  '<path d="M14 4h6v6"/><path d="M20 4 11 13"/><path d="M18 14v5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 4 19V8a1.5 1.5 0 0 1 1.5-1.5H10"/>',
     rimuovi:  '<path d="m7 7 10 10M17 7 7 17"/>',
     stella:   '<path d="M12 4.5 13.7 10l5.3 1.8-5.3 1.8L12 19.5l-1.7-5.9L5 11.8 10.3 10z"/>',
@@ -899,28 +881,6 @@
     renderTagFilters();
     applyFilters();
     applyAudioFilters();
-    preparaSpartiti();
-  }
-
-  /* Gli spartiti della scaletta di domenica sono pochi e sempre gli
-     stessi: li porto in memoria appena la pagina è ferma, uno alla
-     volta e in sordina. Quando il corista tocca il titolo, il PDF è
-     già lì e si apre senza attesa.
-     Con la chiave API non serve: PDF.js legge già a pezzi dal CDN. */
-  function preparaSpartiti() {
-    if (DRIVE_API_KEY) return;
-    const ids = appData.setlist.map(s => s.fileId).filter(Boolean);
-    if (!ids.length) return;
-
-    let i = 0;
-    const passo = () => {
-      if (i >= ids.length) return;
-      const id = ids[i++];
-      if (pdfCache.has(id)) { passo(); return; }
-      pdfBytes(id).catch(() => {}).then(() => setTimeout(passo, 400));
-    };
-    const avviaQuandoLibero = window.requestIdleCallback || (f => setTimeout(f, 1500));
-    avviaQuandoLibero(passo);
   }
 
   /* ---------- Avvisi di aggiornamento ---------- */
@@ -986,14 +946,13 @@
           '<span class="eyebrow">' + esc(item.momento) + '</span>' +
           '<h3 class="stop-title">' + esc(item.title) + '</h3>' +
           '<div class="stop-actions">' +
-            '<button class="btn js-open">' + icon('apri') + 'Apri spartito</button>' +
+            '<a href="' + esc(item.viewUrl || item.downloadUrl) + '" target="_blank" rel="noopener" class="btn">' +
+              icon('apri') + 'Apri spartito</a>' +
             '<a href="' + esc(item.downloadUrl) + '" target="_blank" rel="noopener" class="btn btn-primary">' +
               icon('scarica') + 'Salva</a>' +
             '<button class="btn btn-danger admin-only js-remove" aria-label="Rimuovi">' + icon('rimuovi') + '</button>' +
           '</div>' +
         '</div>';
-      li.querySelector('.js-open').addEventListener('click',
-        () => openPdf(item.fileId, item.title, item.downloadUrl));
       li.querySelector('.js-remove').addEventListener('click', () => removeSong(item.momento));
       body.appendChild(li);
     });
@@ -1053,7 +1012,8 @@
         '<h3 class="card-title">' + esc(s.title) + '</h3>' +
         '<div class="tags">' + momentoTags(s.tags) + '</div>' +
         '<div class="card-actions">' +
-          '<button class="btn js-open">' + icon('apri') + 'Apri</button>' +
+          '<a href="' + esc(s.viewUrl || s.downloadUrl) + '" target="_blank" rel="noopener" class="btn">' +
+            icon('apri') + 'Apri</a>' +
           '<a href="' + esc(s.downloadUrl) + '" target="_blank" rel="noopener" class="btn btn-primary">' +
             icon('scarica') + 'Salva</a>' +
         '</div>' +
@@ -1061,7 +1021,6 @@
           '<select class="js-momento">' + optionsHtml + '</select>' +
           '<button class="btn js-add">' + icon('piu') + 'Aggiungi</button>' +
         '</div>';
-      card.querySelector('.js-open').addEventListener('click', () => openPdf(s.id, s.title, s.downloadUrl));
       card.querySelector('.js-add').addEventListener('click',
         () => addToSetlist(s.id, card.querySelector('.js-momento').value));
       container.appendChild(card);
@@ -1730,53 +1689,16 @@
   }
 
   /* ==========================================================
-     LETTORE DELLO SPARTITO
+     OVERLAY DI DRIVE (solo ripiego audio)
 
-     L'anteprima di Drive dentro un iframe non funziona sui
-     telefoni: Drive cerca di dirottare la richiesta verso la
-     propria app, l'iframe resta vuoto e si vede uno schermo nero.
-     Non è un problema di indirizzo, quindi non basta cambiare URL.
+     Gli spartiti PDF non passano più di qui: il pulsante «Apri»
+     è un semplice link che apre il viewer di Drive in una nuova
+     scheda. Il file arriva in streaming dai server di Google,
+     senza transitare dal server della webapp: apertura immediata
+     su telefono, tablet e computer.
 
-     Qui il PDF viene invece disegnato dalla pagina stessa, con
-     PDF.js: il server manda i byte del file, il browser li rende
-     in pagine di tela (canvas). Stesso risultato su computer,
-     Android e iPhone, senza dipendere da Drive.
-     ========================================================== */
-  const PDFJS_URL    = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
-  const PDFJS_WORKER = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
-
-  const ZOOM_STEPS = [1, 1.35, 1.8, 2.4, 3.2];
-  const pdfCache   = new Map();     // id del file -> byte già scaricati
-
-  let pdfLibLoader = null;
-  let pdfDoc       = null;
-  let pdfZoomIdx   = 0;
-  let pdfToken     = 0;             // annulla i disegni di uno spartito chiuso nel frattempo
-  let pdfTasks     = [];            // disegni ancora in corso
-
-  /* PDF.js non tollera due disegni sovrapposti: prima di ricominciare
-     (zoom, rotazione, chiusura) fermo quelli rimasti a metà. */
-  function fermaDisegni() {
-    pdfTasks.forEach(t => { try { t.cancel(); } catch (e) {} });
-    pdfTasks = [];
-  }
-
-
-  function loadPdfJs() {
-    if (pdfLibLoader) return pdfLibLoader;
-    pdfLibLoader = new Promise((resolve, reject) => {
-      const s = document.createElement('script');
-      s.src = PDFJS_URL;
-      s.onload = () => {
-        if (!window.pdfjsLib) { pdfLibLoader = null; reject(new Error('libreria non valida')); return; }
-        window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER;
-        resolve(window.pdfjsLib);
-      };
-      s.onerror = () => { pdfLibLoader = null; reject(new Error('libreria non raggiungibile')); };
-      document.head.appendChild(s);
-    });
-    return pdfLibLoader;
-  }
+     Questo overlay resta soltanto per i formati audio che il
+     browser non sa riprodurre (vedi apriDrive qui sopra). */
 
   /* Il riquadro con il messaggio e i due pulsanti di ripiego. */
   function notaHtml(titolo, testo, fileId, downloadUrl) {
@@ -1790,186 +1712,22 @@
       '</div></div>';
   }
 
-  /* Prepara la finestra: titolo, link di salvataggio, comandi azzerati. */
+  /* Prepara la finestra: titolo e link di salvataggio. */
   function prontoPerAprire(title, downloadUrl) {
-    pdfToken++;
-    pdfDoc = null;
-    pdfZoomIdx = 0;
     document.getElementById('pdfTitle').textContent = title || '';
     document.getElementById('pdfDownload').href = downloadUrl || '#';
-    document.getElementById('pdfCount').textContent = '';
-    document.getElementById('pdfStage').classList.remove('zoomed');
-    document.getElementById('pdfStage').style.flex = '';
     document.getElementById('pdfFrame').hidden = true;
     document.getElementById('pdfFrame').src = '';
-    aggiornaZoomBtn();
-  }
-
-  function aggiornaZoomBtn() {
-    document.getElementById('pdfZoomOut').disabled = !pdfDoc || pdfZoomIdx === 0;
-    document.getElementById('pdfZoomIn').disabled  = !pdfDoc || pdfZoomIdx === ZOOM_STEPS.length - 1;
-  }
-
-  /* I byte del PDF: dal server, perché Drive non li concede al browser
-     (manca l'intestazione CORS). Restano in memoria per le riaperture. */
-  async function pdfBytes(fileId) {
-    if (pdfCache.has(fileId)) return pdfCache.get(fileId);
-
-    const res = await api('file', { id: fileId });
-    if (!res || !res.success) throw new Error((res && res.msg) || 'file non disponibile');
-
-    const bin = atob(res.b64);
-    const arr = new Uint8Array(bin.length);
-    for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
-
-    // Tengo in memoria gli ultimi spartiti: una scaletta intera ci sta.
-    if (pdfCache.size >= 14) pdfCache.delete(pdfCache.keys().next().value);
-    pdfCache.set(fileId, arr);
-    return arr;
-  }
-
-  /* Due strade per aprire uno spartito.
-     Con la chiave API, PDF.js parla direttamente col CDN di Google e si
-     scarica solo i pezzi che gli servono: la prima pagina compare quasi
-     subito anche su un PDF pesante.
-     Senza chiave si passa dal server, che manda il file tutto intero. */
-  async function apriDocumento(lib, fileId) {
-    const url = driveApiUrl(fileId);
-    if (url) {
-      try {
-        return await lib.getDocument({ url: url, rangeChunkSize: 131072 }).promise;
-      } catch (e) {
-        // Chiave assente, scaduta o CORS negato: si ripiega sul server.
-      }
-    }
-    const bytes = await pdfBytes(fileId);
-    // slice(): PDF.js cede i byte al proprio thread e li svuota,
-    // quindi gli passo sempre una copia e la cache resta buona.
-    return await lib.getDocument({ data: bytes.slice() }).promise;
-  }
-
-  async function openPdf(fileId, title, downloadUrl) {
-    if (!fileId) { window.open(downloadUrl, '_blank', 'noopener'); return; }
-
-    prontoPerAprire(title, downloadUrl);
-
-    const stage = document.getElementById('pdfStage');
-    stage.hidden = false;
-    stage.innerHTML = '<div class="pdf-note">Apro lo spartito…</div>';
-    document.getElementById('pdfViewer').hidden = false;
-    document.body.classList.add('viewer-open');
-
-    const token = pdfToken;
-
-    try {
-      const lib = await loadPdfJs();
-      if (token !== pdfToken) return;
-
-      pdfDoc = await apriDocumento(lib, fileId);
-      if (token !== pdfToken) return;
-
-      aggiornaZoomBtn();
-      await disegnaPagine(token);
-    } catch (err) {
-      if (token !== pdfToken) return;
-      stage.innerHTML = notaHtml(
-        'Anteprima non disponibile',
-        'Non sono riuscito ad aprire questo spartito (' + err.message + '). Puoi comunque leggerlo o scaricarlo da Drive.',
-        fileId, downloadUrl);
-    }
-  }
-
-  /* Disegna tutte le pagine, una alla volta, aggiungendole man mano:
-     la prima compare subito, le altre arrivano mentre si legge. */
-  async function disegnaPagine(token) {
-    const stage = document.getElementById('pdfStage');
-    const larghezza = Math.max(stage.clientWidth - 24, 240);
-    const zoom = ZOOM_STEPS[pdfZoomIdx];
-
-    // Su telefono la memoria per le tele è poca: due volte i pixel
-    // dello schermo bastano per una stampa nitida, oltre si rischia
-    // che il sistema svuoti la tela lasciandola bianca.
-    const nitidezza = Math.min(window.devicePixelRatio || 1, 2);
-
-    fermaDisegni();
-    stage.classList.toggle('zoomed', zoom > 1);
-    stage.innerHTML = '';
-    stage.scrollTop = 0;
-
-    for (let n = 1; n <= pdfDoc.numPages; n++) {
-      if (token !== pdfToken) return;
-
-      const page = await pdfDoc.getPage(n);
-      if (token !== pdfToken) return;
-
-      const naturale = page.getViewport({ scale: 1 });
-      const vista = page.getViewport({ scale: (larghezza / naturale.width) * zoom });
-
-      const canvas = document.createElement('canvas');
-      canvas.className = 'pdf-page';
-      canvas.setAttribute('aria-label', 'Pagina ' + n);
-      canvas.width  = Math.floor(vista.width  * nitidezza);
-      canvas.height = Math.floor(vista.height * nitidezza);
-      canvas.style.width  = Math.floor(vista.width)  + 'px';
-      canvas.style.height = Math.floor(vista.height) + 'px';
-      stage.appendChild(canvas);
-
-      const task = page.render({
-        canvasContext: canvas.getContext('2d', { alpha: false }),
-        viewport: vista,
-        transform: nitidezza !== 1 ? [nitidezza, 0, 0, nitidezza, 0, 0] : null
-      });
-      pdfTasks.push(task);
-
-      try {
-        await task.promise;
-      } catch (e) {
-        return;   // disegno annullato: se ne sta già occupando un altro giro
-      }
-
-      if (n === 1) contaPagine();
-    }
-    if (token === pdfToken) contaPagine();
-  }
-
-  /* Indicatore «pagina X di Y»: guarda quale tela occupa il centro. */
-  function contaPagine() {
-    if (!pdfDoc) return;
-    const stage = document.getElementById('pdfStage');
-    const tele = stage.querySelectorAll('canvas');
-    if (!tele.length) return;
-
-    const centro = stage.scrollTop + stage.clientHeight / 2;
-    let corrente = 1;
-    tele.forEach((c, i) => {
-      if (c.offsetTop - stage.offsetTop <= centro) corrente = i + 1;
-    });
-    document.getElementById('pdfCount').textContent =
-      pdfDoc.numPages > 1 ? corrente + ' / ' + pdfDoc.numPages : '';
-  }
-
-  function cambiaZoom(delta) {
-    if (!pdfDoc) return;
-    const nuovo = Math.min(Math.max(pdfZoomIdx + delta, 0), ZOOM_STEPS.length - 1);
-    if (nuovo === pdfZoomIdx) return;
-    pdfZoomIdx = nuovo;
-    aggiornaZoomBtn();
-    disegnaPagine(pdfToken);
   }
 
   function closePdf() {
-    pdfToken++;
-    fermaDisegni();
     document.getElementById('pdfViewer').hidden = true;
     document.getElementById('pdfStage').innerHTML = '';
     document.getElementById('pdfFrame').src = '';
     document.getElementById('pdfFrame').hidden = true;
-    document.getElementById('pdfCount').textContent = '';
-    if (pdfDoc && pdfDoc.destroy) { try { pdfDoc.destroy(); } catch (e) {} }
-    pdfDoc = null;
-
     document.body.classList.remove('viewer-open');
   }
+
 
   /* ---------- PDF della scaletta ---------- */
   const JSPDF_URL = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
@@ -2145,21 +1903,6 @@
   document.getElementById('searchInput').addEventListener('input', applyFilters);
   document.getElementById('searchAudioInput').addEventListener('input', applyAudioFilters);
   document.getElementById('pdfClose').addEventListener('click', closePdf);
-  document.getElementById('pdfZoomIn').addEventListener('click', () => cambiaZoom(1));
-  document.getElementById('pdfZoomOut').addEventListener('click', () => cambiaZoom(-1));
-  document.getElementById('pdfStage').addEventListener('scroll', contaPagine, { passive: true });
-
-  /* Se lo schermo cambia larghezza (rotazione del telefono, finestra
-     ridimensionata) le pagine vanno ridisegnate: una tela non si adatta
-     da sola come farebbe un'immagine. */
-  let ridisegnaTimer, ultimaLarghezza = window.innerWidth;
-  window.addEventListener('resize', () => {
-    if (!pdfDoc || document.getElementById('pdfViewer').hidden) return;
-    if (window.innerWidth === ultimaLarghezza) return;   // solo la tastiera che si apre
-    ultimaLarghezza = window.innerWidth;
-    clearTimeout(ridisegnaTimer);
-    ridisegnaTimer = setTimeout(() => disegnaPagine(pdfToken), 250);
-  });
   document.getElementById('pdfViewer').addEventListener('click', e => {
     if (e.target.id === 'pdfViewer') closePdf();
   });
