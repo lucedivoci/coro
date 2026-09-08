@@ -851,7 +851,6 @@
         <div class="cal-legend">
           <span><i class="dot-messa"></i>Messa</span>
           <span><i class="dot-prova"></i>Prova</span>
-          <span><i class="dot-concerto"></i>Concerto</span>
           <span><i class="dot-altro"></i>Altro</span>
         </div>
       </div>
@@ -927,7 +926,6 @@
         <select id="calFTipo">
           <option>Prova</option>
           <option>Messa</option>
-          <option>Concerto</option>
           <option>Altro</option>
         </select>
       </label>
@@ -2376,7 +2374,7 @@
     else dataIso = dayKey(new Date(calShown.y, calShown.m, 1));
     document.getElementById('calFDate').value = dataIso;
     document.getElementById('calFOra').value = ev ? ev.ora : '';
-    document.getElementById('calFTipo').value = ev ? (['Prova', 'Messa', 'Concerto', 'Altro'].find(t => tipoKey(t) === tipoKey(ev.tipo)) || 'Altro') : 'Prova';
+    document.getElementById('calFTipo').value = ev ? (['Prova', 'Messa', 'Altro'].find(t => tipoKey(t) === tipoKey(ev.tipo)) || 'Altro') : 'Prova';
     document.getElementById('calFLuogo').value = ev ? ev.luogo : '';
     document.getElementById('calFNote').value = ev ? ev.note : '';
     document.getElementById('calFOff').checked = !!(ev && ev.annullato);
