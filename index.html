@@ -565,6 +565,180 @@
     #toast.error { background: var(--accent-deep); color: #fff; }
 
     /* ============================================================
+       CALENDARIO
+       Il prossimo appuntamento in evidenza, la griglia del mese
+       e sotto la lista dei giorni, con la stessa spina della scaletta.
+       ============================================================ */
+    .cal-layout { display: grid; gap: 22px; grid-template-columns: 1fr; align-items: start; }
+
+    .next-card {
+      background: var(--surface);
+      border: 1px solid var(--rule);
+      border-left: 3px solid var(--accent);
+      border-radius: var(--radius);
+      padding: 16px 20px 18px;
+      margin-bottom: 22px;
+      max-width: 780px;
+    }
+    .next-card .eyebrow { display: block; margin-bottom: 6px; }
+    .next-when {
+      font-family: 'EB Garamond', Georgia, serif;
+      font-size: 1.7rem; font-weight: 600; line-height: 1.15;
+    }
+    .next-what { font-size: 0.9rem; color: var(--ink-soft); margin-top: 6px; }
+    .next-what b { color: var(--ink); }
+    .next-in {
+      display: inline-block; margin-top: 10px;
+      font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--gold-ink); background: var(--gold-soft);
+      border-radius: 5px; padding: 4px 9px;
+    }
+
+    .month-box {
+      background: var(--surface);
+      border: 1px solid var(--rule);
+      border-radius: var(--radius);
+      padding: 14px 16px 16px;
+    }
+    .month-nav { display: flex; align-items: center; gap: 6px; margin-bottom: 12px; }
+    .month-nav h3 {
+      flex: 1; text-align: center;
+      font-family: 'EB Garamond', Georgia, serif;
+      font-size: 1.3rem; font-weight: 600;
+    }
+    .month-nav h3 button {
+      background: none; border: none; font: inherit; color: inherit; cursor: pointer;
+    }
+    .month-nav .mini-btn { width: 36px; height: 36px; }
+
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+    .cal-dow {
+      text-align: center; padding: 4px 0 6px;
+      font-size: 0.64rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--ink-mute);
+    }
+    .cal-dow:nth-child(7) { color: var(--accent); }
+    .cal-day {
+      position: relative;
+      aspect-ratio: 1 / 1;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+      border-radius: var(--radius-sm);
+      border: 1px solid transparent;
+      background: none;
+      font-family: inherit; font-size: 0.9rem; font-weight: 500;
+      color: var(--ink-soft);
+      font-variant-numeric: tabular-nums;
+      cursor: default;
+    }
+    .cal-day.other { color: var(--rule); }
+    .cal-day.past { color: var(--ink-mute); }
+    .cal-day.today { border-color: var(--rule); font-weight: 700; color: var(--ink); }
+    .cal-day.has { cursor: pointer; font-weight: 700; color: var(--ink); background: var(--surface-2); }
+    .cal-day.has.past { color: var(--ink-mute); background: transparent; }
+    .cal-day.sel { background: var(--ink); color: var(--paper) !important; }
+    .cal-dots { display: flex; gap: 3px; height: 6px; }
+    .cal-dots i { width: 6px; height: 6px; border-radius: 50%; display: block; }
+    .cal-day.sel .cal-dots i { background: var(--paper) !important; }
+
+    .dot-messa    { background: var(--accent); }
+    .dot-prova    { background: var(--granito); }
+    .dot-concerto { background: var(--gold); }
+    .dot-altro    { background: var(--ink-mute); }
+    .cal-day.has.past .cal-dots i { opacity: .45; }
+
+    .cal-legend {
+      display: flex; flex-wrap: wrap; gap: 6px 14px;
+      margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--rule-soft);
+      font-size: 0.72rem; font-weight: 600; color: var(--ink-mute);
+    }
+    .cal-legend span { display: inline-flex; align-items: center; gap: 6px; }
+    .cal-legend i { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+
+    /* Lista: la spina della scaletta, colorata per tipo */
+    .ev.stop .stop-dot { border-color: var(--granito); }
+    .ev.stop .stop-dot::after { background: var(--granito); }
+    .ev.is-messa .stop-dot { border-color: var(--accent); }
+    .ev.is-messa .stop-dot::after { background: var(--accent); }
+    .ev.is-concerto .stop-dot { border-color: var(--gold); }
+    .ev.is-concerto .stop-dot::after { background: var(--gold); }
+    .ev.is-altro .stop-dot { border-color: var(--ink-mute); }
+    .ev.is-altro .stop-dot::after { background: var(--ink-mute); }
+    .ev .eyebrow.tipo-prova { color: var(--granito); }
+    .ev .eyebrow.tipo-concerto { color: var(--gold-ink); }
+    .ev .eyebrow.tipo-altro { color: var(--ink-mute); }
+    .ev.past .stop-body { opacity: .55; }
+    .ev.off .stop-title { text-decoration: line-through; color: var(--ink-mute); }
+    .ev.off .stop-dot { border-style: dashed; }
+    .ev.off .stop-dot::after { display: none; }
+    .ev.sel .stop-body { border-color: var(--ink); }
+    .ev-meta { font-size: 0.86rem; color: var(--ink-soft); margin-top: 6px; }
+    .ev-meta b { color: var(--ink); font-weight: 600; }
+    .ev-note { font-size: 0.86rem; color: var(--ink-soft); margin-top: 4px; font-style: italic;
+               font-family: 'EB Garamond', Georgia, serif; font-size: 1rem; }
+    .ev-off {
+      display: inline-block; margin-left: 8px; vertical-align: middle;
+      font-size: 0.64rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--accent-deep); background: var(--accent-soft); border-radius: 5px; padding: 3px 7px;
+    }
+    .ev-day-head {
+      font-family: 'EB Garamond', Georgia, serif;
+      font-size: 1.05rem; color: var(--ink-mute);
+      margin: 18px 0 8px; padding-left: 32px;
+    }
+    .ev-day-head:first-child { margin-top: 0; }
+
+    /* Modulo dell'appuntamento (solo admin) */
+    #calModal {
+      position: fixed; inset: 0; z-index: 450;
+      background: rgba(28,27,25,.55);
+      display: flex; align-items: flex-end; justify-content: center;
+      padding: 0;
+    }
+    #calModal[hidden] { display: none; }
+    .cal-form {
+      width: 100%; max-width: 520px;
+      background: var(--surface);
+      border-radius: var(--radius) var(--radius) 0 0;
+      padding: 20px 20px calc(22px + env(safe-area-inset-bottom));
+      display: flex; flex-direction: column; gap: 12px;
+      max-height: 92vh; overflow: auto;
+    }
+    .cal-form h3 {
+      font-family: 'EB Garamond', Georgia, serif;
+      font-size: 1.4rem; font-weight: 600;
+    }
+    .cal-form label {
+      display: flex; flex-direction: column; gap: 5px;
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--ink-mute);
+    }
+    .cal-form input, .cal-form select, .cal-form textarea {
+      font-family: inherit; font-size: 0.95rem;
+      padding: 11px 12px;
+      border: 1px solid var(--rule); border-radius: var(--radius-sm);
+      background: var(--surface-2); color: var(--ink);
+      outline: none; width: 100%;
+    }
+    .cal-form input:focus, .cal-form select:focus, .cal-form textarea:focus { border-color: var(--accent); }
+    .cal-form textarea { min-height: 70px; resize: vertical; }
+    .cal-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .cal-check {
+      flex-direction: row !important; align-items: center; gap: 10px !important;
+      text-transform: none !important; letter-spacing: 0 !important;
+      font-size: 0.9rem !important; font-weight: 500 !important; color: var(--ink) !important;
+    }
+    .cal-check input { width: 20px; height: 20px; padding: 0; accent-color: var(--accent); }
+    .cal-form-actions { display: flex; gap: 8px; margin-top: 6px; }
+    .cal-form-actions .btn-primary { flex: 1; }
+
+    @media (min-width: 760px) {
+      .cal-layout { grid-template-columns: 340px 1fr; gap: 28px; }
+      .month-box { position: sticky; top: 72px; }
+      #calModal { align-items: center; padding: 30px; }
+      .cal-form { border-radius: var(--radius); padding-bottom: 22px; }
+    }
+
+    /* ============================================================
        SCHERMI GRANDI
        ============================================================ */
     @media (hover: hover) {
@@ -639,14 +813,54 @@
 
   <div class="nav-wrap">
     <div class="nav-inner">
-      <button class="tab-btn active" data-tab="setlistTab"><span data-icon="scaletta"></span>Scaletta</button>
+      <button class="tab-btn active" data-tab="calendarTab"><span data-icon="calendario"></span>Calendario</button>
+      <button class="tab-btn" data-tab="setlistTab"><span data-icon="scaletta"></span>Scaletta</button>
       <button class="tab-btn" data-tab="archiveTab"><span data-icon="spartiti"></span>Spartiti</button>
       <button class="tab-btn" data-tab="audioTab"><span data-icon="audio"></span>Audio</button>
     </div>
   </div>
 
+  <!-- CALENDARIO -->
+  <section id="calendarTab" class="view-panel active">
+    <div class="liturgy-head">
+      <h2 class="liturgy-title">Calendario</h2>
+      <div class="liturgy-meta" id="calendarUpdate" hidden></div>
+      <div class="liturgy-tools">
+        <button class="btn btn-paper" id="downloadCalAllBtn">
+          <span data-icon="pdf"></span>Scarica tutto
+        </button>
+        <button class="btn btn-paper" id="downloadCalMonthBtn">
+          <span data-icon="pdf"></span><span id="downloadCalMonthLabel">Scarica il mese</span>
+        </button>
+        <button class="btn btn-primary admin-only" id="addEventBtn">
+          <span data-icon="piu"></span>Aggiungi
+        </button>
+      </div>
+    </div>
+
+    <div class="next-card" id="nextCard" hidden></div>
+
+    <div class="cal-layout">
+      <div class="month-box">
+        <div class="month-nav">
+          <button class="mini-btn" id="calPrev" aria-label="Mese precedente"><span data-icon="sx"></span></button>
+          <h3><button id="calMonthTitle" title="Torna al mese corrente">…</button></h3>
+          <button class="mini-btn" id="calNext" aria-label="Mese successivo"><span data-icon="dx"></span></button>
+        </div>
+        <div class="cal-grid" id="calGrid"></div>
+        <div class="cal-legend">
+          <span><i class="dot-messa"></i>Messa</span>
+          <span><i class="dot-prova"></i>Prova</span>
+          <span><i class="dot-concerto"></i>Concerto</span>
+          <span><i class="dot-altro"></i>Altro</span>
+        </div>
+      </div>
+      <ol class="spine" id="calList"><li class="empty-state">Caricamento…</li></ol>
+    </div>
+  </section>
+
   <!-- SCALETTA -->
-  <section id="setlistTab" class="view-panel active">
+  <section id="setlistTab" class="view-panel">
     <div class="liturgy-head">
       <h2 class="liturgy-title" id="liturgyTitle">Caricamento…</h2>
       <div class="liturgy-meta" id="setlistUpdate" hidden></div>
@@ -698,6 +912,32 @@
       </div>
       <div id="pdfStage" tabindex="0"></div>
       <iframe id="pdfFrame" title="Anteprima" allow="autoplay" hidden></iframe>
+    </div>
+  </div>
+
+  <!-- MODULO APPUNTAMENTO (solo admin) -->
+  <div id="calModal" hidden role="dialog" aria-modal="true" aria-label="Appuntamento">
+    <div class="cal-form">
+      <h3 id="calFormTitle">Nuovo appuntamento</h3>
+      <div class="cal-row2">
+        <label>Data<input type="date" id="calFDate" required></label>
+        <label>Ora<input type="time" id="calFOra"></label>
+      </div>
+      <label>Tipo
+        <select id="calFTipo">
+          <option>Prova</option>
+          <option>Messa</option>
+          <option>Concerto</option>
+          <option>Altro</option>
+        </select>
+      </label>
+      <label>Luogo<input type="text" id="calFLuogo" placeholder="Es. Chiesa parrocchiale"></label>
+      <label>Note<textarea id="calFNote" placeholder="Es. Messa di Natale, portare la cartellina"></textarea></label>
+      <label class="cal-check"><input type="checkbox" id="calFOff">Annullato (resta visibile, barrato)</label>
+      <div class="cal-form-actions">
+        <button class="btn btn-quiet" id="calFCancel">Annulla</button>
+        <button class="btn btn-primary" id="calFSave">Salva</button>
+      </div>
     </div>
   </div>
 
@@ -767,7 +1007,7 @@
   const AUDIO_TAGS = ["Tutti", "Messa", "Prove", "Audio_guida"];
   const GIORNI_NOVITA = 14;
 
-  let appData = { songs: [], audios: [], setlist: [], momenti: [], liturgyTitle: "", choirName: "", logoUrl: "" };
+  let appData = { songs: [], audios: [], setlist: [], calendar: [], momenti: [], liturgyTitle: "", choirName: "", logoUrl: "" };
   let activeTag = "Tutti";
   let activeAudioTag = "Tutti";
   let adminToken = sessionStorage.getItem('coroAdminPwd') || "";
@@ -778,6 +1018,10 @@
      aspetto su ogni sistema operativo. */
   const ICONS = {
     scaletta: '<path d="M4 6h1.5M4 12h1.5M4 18h1.5M9 6h11M9 12h11M9 18h11"/>',
+    calendario: '<rect x="3.5" y="5.5" width="17" height="15" rx="2"/><path d="M3.5 10.5h17M8 3.5v4M16 3.5v4"/><path d="M8 14.5h2.5M13.5 14.5H16M8 17.5h2.5"/>',
+    sx:       '<path d="m14.5 6-6 6 6 6"/>',
+    dx:       '<path d="m9.5 6 6 6-6 6"/>',
+    matita:   '<path d="m4 20 4.2-1L18.3 8.9a1.6 1.6 0 0 0 0-2.3l-.9-.9a1.6 1.6 0 0 0-2.3 0L5 15.8z"/><path d="m13.6 7.2 3.2 3.2"/>',
     spartiti: '<path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4"/><path d="M10.5 17.2a1.6 1.6 0 1 0 3.2 0V11l2.3-.8"/>',
     audio:    '<path d="M4 10.5v3M8 7.5v9M12 4.5v15M16 8.5v7M20 11v2"/>',
     apri:     '<path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4"/><path d="M9.5 13h5M9.5 17h3.5"/>',
@@ -878,6 +1122,7 @@
     renderUpdateBar('audiosUpdate', upd.audios, 'nuova registrazione', 'nuove registrazioni');
 
     renderSetlist();
+    renderCalendar();
     renderTagFilters();
     applyFilters();
     applyAudioFilters();
@@ -1927,6 +2172,431 @@
       document.getElementById(btn.dataset.tab).classList.add('active');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     });
+  });
+
+  /* ==========================================================
+     CALENDARIO
+     Gli appuntamenti arrivano dal foglio "Calendario" già ordinati.
+     Qui: il prossimo in evidenza, la griglia del mese, la lista
+     del mese e, per l'admin, il modulo per aggiungere e correggere.
+     ========================================================== */
+  const MESI = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno',
+                'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
+  const GIORNI = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
+  const GIORNI_BREVI = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'];
+
+  let calShown = null;      // { y, m } mese in griglia (m = 0-11)
+  let calSelDay = '';       // "yyyy-mm-dd" del giorno toccato nella griglia
+  let calEditing = null;    // appuntamento in modifica nel modulo
+
+  /** "28/08/2026" -> Date locale a mezzanotte. */
+  function parseIt(s) {
+    const m = String(s || '').match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    return m ? new Date(+m[3], +m[2] - 1, +m[1]) : null;
+  }
+  function dayKey(d) {
+    return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+  }
+  function oggiKey() { return dayKey(new Date()); }
+  function tipoKey(t) {
+    const s = String(t || '').toLowerCase();
+    return s.startsWith('mess') ? 'messa' : s.startsWith('prov') ? 'prova' :
+           s.startsWith('conc') ? 'concerto' : 'altro';
+  }
+  /** Titolo di un appuntamento nella lista: il tipo, arricchito dal luogo. */
+  function evTitle(ev) {
+    return ev.tipo + (ev.luogo ? ' · ' + ev.luogo : '');
+  }
+  function evDay(ev) { return dayKey(parseIt(ev.date)); }
+  function dataEstesa(d) {
+    return GIORNI[d.getDay()] + ' ' + d.getDate() + ' ' + MESI[d.getMonth()].toLowerCase() + ' ' + d.getFullYear();
+  }
+
+  function calEvents() { return appData.calendar || []; }
+  function eventiDelMese(y, m) {
+    return calEvents().filter(ev => { const d = parseIt(ev.date); return d && d.getFullYear() === y && d.getMonth() === m; });
+  }
+  function prossimoEvento() {
+    const oggi = oggiKey();
+    return calEvents().find(ev => !ev.annullato && evDay(ev) >= oggi) || null;
+  }
+
+  function renderCalendar() {
+    const upd = (appData.updates || {}).calendar;
+    const el = document.getElementById('calendarUpdate');
+    const ts = parseStamp(upd && upd.date);
+    if (ts) { el.textContent = 'Aggiornato ' + quando(ts, upd.date); el.hidden = false; }
+    else el.hidden = true;
+
+    if (!calShown) {
+      // Alla prima apertura mostro il mese del prossimo appuntamento, se c'è
+      const nx = prossimoEvento();
+      const d = nx ? parseIt(nx.date) : new Date();
+      calShown = { y: d.getFullYear(), m: d.getMonth() };
+    }
+    renderNextCard();
+    renderMonthGrid();
+    renderCalList();
+  }
+
+  function renderNextCard() {
+    const box = document.getElementById('nextCard');
+    const nx = prossimoEvento();
+    if (!nx) { box.hidden = true; return; }
+    const d = parseIt(nx.date);
+    const oggi = new Date(); oggi.setHours(0, 0, 0, 0);
+    const g = Math.round((d - oggi) / 86400000);
+    const fra = g === 0 ? 'Oggi' : g === 1 ? 'Domani' : 'Fra ' + g + ' giorni';
+    box.innerHTML =
+      '<span class="eyebrow">Prossimo appuntamento</span>' +
+      '<div class="next-when">' + esc(dataEstesa(d)) + (nx.ora ? ', ore ' + esc(nx.ora) : '') + '</div>' +
+      '<div class="next-what"><b>' + esc(nx.tipo) + '</b>' +
+        (nx.luogo ? ' · ' + esc(nx.luogo) : '') + (nx.note ? ' — ' + esc(nx.note) : '') + '</div>' +
+      '<span class="next-in">' + fra + '</span>';
+    box.hidden = false;
+  }
+
+  function renderMonthGrid() {
+    const { y, m } = calShown;
+    document.getElementById('calMonthTitle').textContent = MESI[m] + ' ' + y;
+    document.getElementById('downloadCalMonthLabel').textContent = 'Scarica ' + MESI[m].toLowerCase();
+
+    const grid = document.getElementById('calGrid');
+    grid.innerHTML = '';
+    ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'].forEach(g => {
+      const h = document.createElement('div'); h.className = 'cal-dow'; h.textContent = g; grid.appendChild(h);
+    });
+
+    // Appuntamenti del mese raggruppati per giorno
+    const perGiorno = {};
+    eventiDelMese(y, m).forEach(ev => { (perGiorno[evDay(ev)] = perGiorno[evDay(ev)] || []).push(ev); });
+
+    const primo = new Date(y, m, 1);
+    const inizio = (primo.getDay() + 6) % 7;     // lunedì = 0
+    const nGiorni = new Date(y, m + 1, 0).getDate();
+    const oggi = oggiKey();
+
+    const celle = [];
+    for (let i = 0; i < inizio; i++) celle.push(null);
+    for (let g = 1; g <= nGiorni; g++) celle.push(new Date(y, m, g));
+    while (celle.length % 7) celle.push(null);
+
+    celle.forEach(d => {
+      const c = document.createElement('button');
+      c.type = 'button';
+      if (!d) { c.className = 'cal-day other'; c.disabled = true; grid.appendChild(c); return; }
+      const k = dayKey(d);
+      const evs = perGiorno[k] || [];
+      c.className = 'cal-day' + (k === oggi ? ' today' : '') + (k < oggi ? ' past' : '') +
+                    (evs.length ? ' has' : '') + (k === calSelDay ? ' sel' : '');
+      c.innerHTML = '<span>' + d.getDate() + '</span><span class="cal-dots">' +
+        [...new Set(evs.map(e => tipoKey(e.tipo)))].slice(0, 3).map(t => '<i class="dot-' + t + '"></i>').join('') +
+        '</span>';
+      if (evs.length) {
+        c.title = evs.map(e => e.tipo + (e.ora ? ' ' + e.ora : '')).join(', ');
+        c.addEventListener('click', () => {
+          calSelDay = calSelDay === k ? '' : k;
+          renderMonthGrid(); renderCalList();
+          const target = document.querySelector('.ev.sel');
+          if (target && calSelDay) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
+      } else c.disabled = true;
+      grid.appendChild(c);
+    });
+  }
+
+  function renderCalList() {
+    const { y, m } = calShown;
+    const list = document.getElementById('calList');
+    list.innerHTML = '';
+    const evs = eventiDelMese(y, m);
+
+    if (!calEvents().length) {
+      list.innerHTML = '<li class="empty-state">Il calendario non è ancora stato pubblicato.<br>Le date compariranno qui appena pronte.</li>';
+      return;
+    }
+    if (!evs.length) {
+      list.innerHTML = '<li class="empty-state">Nessun appuntamento a ' + esc(MESI[m].toLowerCase()) + '.</li>';
+      return;
+    }
+
+    const oggi = oggiKey();
+    let ultimoGiorno = '';
+    evs.forEach(ev => {
+      const d = parseIt(ev.date);
+      const k = dayKey(d);
+      if (k !== ultimoGiorno) {
+        ultimoGiorno = k;
+        const h = document.createElement('li');
+        h.className = 'ev-day-head';
+        h.textContent = GIORNI[d.getDay()] + ' ' + d.getDate();
+        list.appendChild(h);
+      }
+      const tk = tipoKey(ev.tipo);
+      const li = document.createElement('li');
+      li.className = 'stop ev is-' + tk + (k < oggi ? ' past' : '') + (ev.annullato ? ' off' : '') +
+                     (k === calSelDay ? ' sel' : '');
+      li.innerHTML =
+        '<span class="stop-dot"></span>' +
+        '<div class="stop-body">' +
+          '<span class="eyebrow tipo-' + tk + '">' + esc(ev.tipo) + '</span>' +
+          (ev.annullato ? '<span class="ev-off">Annullato</span>' : '') +
+          '<h3 class="stop-title">' + (ev.ora ? 'Ore ' + esc(ev.ora) : esc(ev.tipo)) +
+            (ev.luogo ? '<span style="font-weight:400"> · ' + esc(ev.luogo) + '</span>' : '') + '</h3>' +
+          (ev.note ? '<div class="ev-note">' + esc(ev.note) + '</div>' : '') +
+          '<div class="stop-actions admin-box" style="border-top:0;padding-top:0;margin-top:12px">' +
+            '<button class="btn btn-quiet js-edit">' + icon('matita') + 'Modifica</button>' +
+            '<button class="btn btn-danger js-del" aria-label="Elimina">' + icon('rimuovi') + '</button>' +
+          '</div>' +
+        '</div>';
+      li.querySelector('.js-edit').addEventListener('click', () => openCalForm(ev));
+      li.querySelector('.js-del').addEventListener('click', () => {
+        if (confirm('Eliminare l\'appuntamento del ' + ev.date + '?')) run('calDelete', { id: ev.id });
+      });
+      list.appendChild(li);
+    });
+  }
+
+  function calGoto(delta) {
+    let { y, m } = calShown;
+    m += delta;
+    if (m < 0) { m = 11; y--; } else if (m > 11) { m = 0; y++; }
+    calShown = { y, m };
+    calSelDay = '';
+    renderMonthGrid(); renderCalList();
+  }
+
+  /* ---------- Modulo admin ---------- */
+  function openCalForm(ev) {
+    calEditing = ev || null;
+    document.getElementById('calFormTitle').textContent = ev ? 'Modifica appuntamento' : 'Nuovo appuntamento';
+    let dataIso = '';
+    if (ev) dataIso = evDay(ev);
+    else if (calSelDay) dataIso = calSelDay;
+    else dataIso = dayKey(new Date(calShown.y, calShown.m, 1));
+    document.getElementById('calFDate').value = dataIso;
+    document.getElementById('calFOra').value = ev ? ev.ora : '';
+    document.getElementById('calFTipo').value = ev ? (['Prova', 'Messa', 'Concerto', 'Altro'].find(t => tipoKey(t) === tipoKey(ev.tipo)) || 'Altro') : 'Prova';
+    document.getElementById('calFLuogo').value = ev ? ev.luogo : '';
+    document.getElementById('calFNote').value = ev ? ev.note : '';
+    document.getElementById('calFOff').checked = !!(ev && ev.annullato);
+    document.getElementById('calModal').hidden = false;
+    document.body.classList.add('viewer-open');
+    setTimeout(() => document.getElementById('calFDate').focus(), 50);
+  }
+  function closeCalForm() {
+    document.getElementById('calModal').hidden = true;
+    document.body.classList.remove('viewer-open');
+    calEditing = null;
+  }
+  async function saveCalForm() {
+    const iso = document.getElementById('calFDate').value;
+    const m = iso.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!m) { toast('Inserisci una data valida', 'error'); return; }
+    const params = {
+      date: m[3] + '/' + m[2] + '/' + m[1],
+      ora: document.getElementById('calFOra').value,
+      tipo: document.getElementById('calFTipo').value,
+      luogo: document.getElementById('calFLuogo').value.trim(),
+      note: document.getElementById('calFNote').value.trim(),
+      annullato: document.getElementById('calFOff').checked ? 'sì' : ''
+    };
+    const btn = document.getElementById('calFSave');
+    btn.disabled = true; btn.textContent = 'Salvo…';
+    // Dopo il salvataggio la griglia va al mese dell'appuntamento
+    calShown = { y: +m[1], m: +m[2] - 1 };
+    calSelDay = iso;
+    if (calEditing) await run('calEdit', Object.assign({ id: calEditing.id }, params));
+    else await run('calAdd', params);
+    btn.disabled = false; btn.textContent = 'Salva';
+    closeCalForm();
+  }
+
+  /* ---------- PDF del calendario ----------
+     Stessa mano della scaletta: testata centrata, filetto oro,
+     un blocco per mese con occhiello rosso, righe leggere. */
+  function nomeFileCal(scope) {
+    const base = scope === 'month' ? MESI[calShown.m] + '_' + calShown.y : 'completo';
+    return 'Calendario_' + base + '.pdf';
+  }
+  function eventiPerPdf(scope) {
+    if (scope === 'month') return eventiDelMese(calShown.y, calShown.m);
+    // Completo: dal primo del mese corrente in avanti
+    const oggi = new Date();
+    const da = dayKey(new Date(oggi.getFullYear(), oggi.getMonth(), 1));
+    return calEvents().filter(ev => evDay(ev) >= da);
+  }
+
+  async function downloadCalendarPdf(scope) {
+    const evs = eventiPerPdf(scope);
+    if (!evs.length) { toast('Nessun appuntamento da stampare'); return; }
+    const btn = document.getElementById(scope === 'month' ? 'downloadCalMonthBtn' : 'downloadCalAllBtn');
+    const prima = btn.innerHTML;
+    btn.textContent = 'Preparo il PDF…';
+    btn.disabled = true;
+
+    try {
+      const JsPDF = await loadJsPdf();
+      const doc = new JsPDF({ unit: 'mm', format: 'a4' });
+      const W = 210, M = 20;
+      const sotto = scope === 'month' ? MESI[calShown.m] + ' ' + calShown.y : 'Calendario delle prove e delle celebrazioni';
+      let y = 28;
+
+      doc.setFont('times', 'bold'); doc.setFontSize(19); doc.setTextColor(27, 26, 23);
+      doc.text(appData.choirName || 'Coro', W / 2, y, { align: 'center' });
+      y += 8;
+      doc.setFont('times', 'normal'); doc.setFontSize(13); doc.setTextColor(85, 82, 75);
+      doc.text(sotto, W / 2, y, { align: 'center' });
+      y += 6;
+      doc.setDrawColor(ORO[0], ORO[1], ORO[2]); doc.setLineWidth(0.7);
+      doc.line(W / 2 - 16, y, W / 2 + 16, y);
+      y += 14;
+
+      // Colonne: giorno | tipo | ora | luogo e note
+      const cGiorno = M, cTipo = M + 24, cOra = M + 52, cDett = M + 68, cFine = W - M;
+      let meseCorrente = '';
+
+      evs.forEach(ev => {
+        const d = parseIt(ev.date);
+        const mese = MESI[d.getMonth()] + ' ' + d.getFullYear();
+        const dett = [ev.luogo, ev.note].filter(String).join(' — ');
+        const righeDett = dett ? doc.splitTextToSize(dett, cFine - cDett - (ev.annullato ? 26 : 0)) : [];
+        const altezza = 5 + Math.max(0, righeDett.length - 1) * 4.6 + 4.5;
+
+        if (mese !== meseCorrente) {
+          if (y > 250) { doc.addPage(); y = 28; }
+          if (meseCorrente) y += 6;
+          meseCorrente = mese;
+          doc.setFont('helvetica', 'bold'); doc.setFontSize(8);
+          doc.setTextColor(ROSSO[0], ROSSO[1], ROSSO[2]);
+          doc.text(mese.toUpperCase(), M, y, { charSpace: 0.5 });
+          y += 2.5;
+          doc.setDrawColor(ROSSO[0], ROSSO[1], ROSSO[2]); doc.setLineWidth(0.4);
+          doc.line(M, y, cFine, y);
+          y += 8;
+        } else if (y + altezza > 272) {
+          doc.addPage(); y = 28;
+          doc.setFont('helvetica', 'bold'); doc.setFontSize(8);
+          doc.setTextColor(ROSSO[0], ROSSO[1], ROSSO[2]);
+          doc.text((mese + ' (segue)').toUpperCase(), M, y, { charSpace: 0.5 });
+          y += 2.5;
+          doc.setDrawColor(ROSSO[0], ROSSO[1], ROSSO[2]); doc.setLineWidth(0.4);
+          doc.line(M, y, cFine, y);
+          y += 8;
+        }
+
+        const grigio = ev.annullato ? [150, 146, 138] : null;
+        const tk = tipoKey(ev.tipo);
+
+        // Giorno: "Dom 4"
+        doc.setFont('times', 'bold'); doc.setFontSize(12);
+        if (grigio) doc.setTextColor(...grigio); else doc.setTextColor(27, 26, 23);
+        doc.text(GIORNI_BREVI[d.getDay()] + ' ' + d.getDate(), cGiorno, y);
+
+        // Tipo: le messe e i concerti in grassetto
+        doc.setFont('helvetica', tk === 'prova' || tk === 'altro' ? 'normal' : 'bold'); doc.setFontSize(9.5);
+        if (grigio) doc.setTextColor(...grigio);
+        else if (tk === 'messa') doc.setTextColor(ROSSO[0], ROSSO[1], ROSSO[2]);
+        else if (tk === 'concerto') doc.setTextColor(110, 86, 25);
+        else doc.setTextColor(85, 82, 75);
+        doc.text(ev.tipo, cTipo, y);
+
+        // Ora
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(9.5);
+        doc.setTextColor(...(grigio || [27, 26, 23]));
+        if (ev.ora) doc.text(ev.ora, cOra, y);
+
+        // Luogo e note
+        if (righeDett.length) {
+          doc.setFont('times', 'normal'); doc.setFontSize(10.5);
+          doc.setTextColor(...(grigio || [85, 82, 75]));
+          doc.text(righeDett, cDett, y);
+        }
+
+        if (ev.annullato) {
+          doc.setDrawColor(150, 146, 138); doc.setLineWidth(0.3);
+          doc.line(cGiorno, y - 1.2, cFine - 24, y - 1.2);
+          doc.setFont('helvetica', 'bold'); doc.setFontSize(6.5);
+          doc.setTextColor(ROSSO[0], ROSSO[1], ROSSO[2]);
+          doc.text('ANNULLATO', cFine, y, { align: 'right', charSpace: 0.4 });
+        }
+
+        y += altezza;
+        doc.setDrawColor(226, 223, 215); doc.setLineWidth(0.2);
+        doc.line(M, y - 1.5, cFine, y - 1.5);
+        y += 3.5;
+      });
+
+      const pagine = doc.getNumberOfPages();
+      for (let p = 1; p <= pagine; p++) {
+        doc.setPage(p);
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(8);
+        doc.setTextColor(150, 146, 138);
+        const oggi = new Date().toLocaleDateString('it-CH');
+        doc.text('Generato il ' + oggi + '  ·  le date possono subire variazioni: fa fede il sito' +
+                 (pagine > 1 ? '  ·  ' + p + '/' + pagine : ''), W / 2, 288, { align: 'center' });
+      }
+      doc.save(nomeFileCal(scope));
+    } catch (err) {
+      stampaCalendario(scope);
+    }
+
+    btn.innerHTML = prima;
+    btn.disabled = false;
+  }
+
+  /** Ripiego se la libreria non si carica: stampa del browser. */
+  function stampaCalendario(scope) {
+    toast('Uso la stampa del browser: scegli "Salva come PDF".');
+    const evs = eventiPerPdf(scope);
+    const gruppi = [];
+    evs.forEach(ev => {
+      const d = parseIt(ev.date);
+      const mm = MESI[d.getMonth()] + ' ' + d.getFullYear();
+      let g = gruppi[gruppi.length - 1];
+      if (!g || g.mese !== mm) { g = { mese: mm, righe: [] }; gruppi.push(g); }
+      g.righe.push('<tr' + (ev.annullato ? ' class="off"' : '') + '><td class="g">' +
+        GIORNI_BREVI[d.getDay()] + ' ' + d.getDate() + '</td><td class="t">' + esc(ev.tipo) +
+        '</td><td>' + esc(ev.ora) + '</td><td class="d">' +
+        esc([ev.luogo, ev.note].filter(String).join(' — ')) + '</td></tr>');
+    });
+    const html = gruppi.map(g => '<h3>' + esc(g.mese) + '</h3><table>' + g.righe.join('') + '</table>').join('');
+    const w = window.open('', '_blank');
+    if (!w) { toast('Consenti le finestre pop-up per stampare.', 'error'); return; }
+    w.document.write('<!doctype html><html lang="it"><head><meta charset="utf-8"><title>' +
+      esc(nomeFileCal(scope).replace(/\.pdf$/, '')) + '</title><style>' +
+      'body{font-family:Georgia,serif;padding:34px;color:#1b1a17}' +
+      'h1{font-size:21px;margin:0;text-align:center}' +
+      'h2{font-size:14px;font-weight:400;color:#55524b;margin:6px 0 24px;text-align:center}' +
+      'h3{font-family:Arial,sans-serif;font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:#a5252b;' +
+      'border-bottom:1px solid #a5252b;padding-bottom:4px;margin:26px 0 8px}' +
+      'table{width:100%;border-collapse:collapse}' +
+      'td{padding:9px 6px;border-bottom:1px solid #e2dfd7;font-size:14px;vertical-align:top}' +
+      'td.g{width:70px;font-weight:700}td.t{width:90px;font-family:Arial,sans-serif;font-size:12px}' +
+      'td.d{color:#55524b}tr.off td{color:#96928a;text-decoration:line-through}' +
+      '</style></head><body><h1>' + esc(appData.choirName) + '</h1><h2>' +
+      (scope === 'month' ? esc(MESI[calShown.m] + ' ' + calShown.y) : 'Calendario delle prove e delle celebrazioni') +
+      '</h2>' + html + '</body></html>');
+    w.document.close();
+    w.focus();
+    setTimeout(() => w.print(), 500);
+  }
+
+  /* ---------- Collegamenti del calendario ---------- */
+  document.getElementById('calPrev').addEventListener('click', () => calGoto(-1));
+  document.getElementById('calNext').addEventListener('click', () => calGoto(1));
+  document.getElementById('calMonthTitle').addEventListener('click', () => {
+    const n = new Date(); calShown = { y: n.getFullYear(), m: n.getMonth() }; calSelDay = '';
+    renderMonthGrid(); renderCalList();
+  });
+  document.getElementById('downloadCalAllBtn').addEventListener('click', () => downloadCalendarPdf('all'));
+  document.getElementById('downloadCalMonthBtn').addEventListener('click', () => downloadCalendarPdf('month'));
+  document.getElementById('addEventBtn').addEventListener('click', () => openCalForm(null));
+  document.getElementById('calFCancel').addEventListener('click', closeCalForm);
+  document.getElementById('calFSave').addEventListener('click', saveCalForm);
+  document.getElementById('calModal').addEventListener('click', e => { if (e.target.id === 'calModal') closeCalForm(); });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && !document.getElementById('calModal').hidden) closeCalForm();
   });
 
   renderAudioTagFilters();
