@@ -690,7 +690,15 @@
       display: flex; align-items: flex-end; justify-content: center;
       padding: 0;
     }
-    #calModal[hidden], #videoModal[hidden] { display: none; }
+    
+    #ytPlayerModal {
+      position: fixed; inset: 0; z-index: 600;
+      background: #1C1B19;
+      display: flex; flex-direction: column;
+    }
+
+    #calModal[hidden], #videoModal[hidden], #ytPlayerModal[hidden] { display: none; }
+    
     .cal-form {
       width: 100%; max-width: 520px;
       background: var(--surface);
@@ -974,7 +982,7 @@
   </div>
 
   <!-- LETTORE VIDEO YOUTUBE A SCHERMO INTERO -->
-  <div id="ytPlayerModal" hidden role="dialog" aria-modal="true" style="position:fixed;inset:0;z-index:600;background:#1C1B19;display:flex;flex-direction:column;">
+  <div id="ytPlayerModal" hidden role="dialog" aria-modal="true">
     <div class="pdf-shell">
       <div class="pdf-bar">
         <button id="ytClose" aria-label="Chiudi"><span data-icon="chiudi"></span></button>
