@@ -484,9 +484,7 @@
     body.is-admin .admin-box { display: flex; }
 
     /* ============================================================
-       OVERLAY DI DRIVE (ripiego audio)
-       Gli spartiti PDF si aprono in una nuova scheda: questo
-       overlay serve solo ai formati audio non riproducibili.
+       OVERLAY DI DRIVE E MODALI
        ============================================================ */
     #pdfViewer { position: fixed; inset: 0; z-index: 400; background: #2A2825; display: flex; }
     #pdfViewer[hidden] { display: none; }
@@ -565,9 +563,7 @@
     #toast.error { background: var(--accent-deep); color: #fff; }
 
     /* ============================================================
-       CALENDARIO
-       Il prossimo appuntamento in evidenza, la griglia del mese
-       e sotto la lista dei giorni, con la stessa spina della scaletta.
+       CALENDARIO E MODULI ADMIN
        ============================================================ */
     .cal-layout { display: grid; gap: 22px; grid-template-columns: 1fr; align-items: start; }
 
@@ -688,14 +684,13 @@
     }
     .ev-day-head:first-child { margin-top: 0; }
 
-    /* Modulo dell'appuntamento (solo admin) */
-    #calModal {
+    #calModal, #videoModal {
       position: fixed; inset: 0; z-index: 450;
       background: rgba(28,27,25,.55);
       display: flex; align-items: flex-end; justify-content: center;
       padding: 0;
     }
-    #calModal[hidden] { display: none; }
+    #calModal[hidden], #videoModal[hidden] { display: none; }
     .cal-form {
       width: 100%; max-width: 520px;
       background: var(--surface);
@@ -735,7 +730,7 @@
     @media (min-width: 760px) {
       .cal-layout { grid-template-columns: 340px 1fr; gap: 28px; }
       .month-box { position: sticky; top: 72px; }
-      #calModal { align-items: center; padding: 30px; }
+      #calModal, #videoModal { align-items: center; padding: 30px; }
       .cal-form { border-radius: var(--radius); padding-bottom: 22px; }
     }
 
@@ -758,10 +753,20 @@
       .ghost-btn .label { display: inline; }
     }
 
-    /* Telefoni stretti: la velocità sta nella scheda, non nella barra */
-    @media (max-width: 359px) {
+    /* Telefoni stretti: facciamo entrare 4 linguette senza scroll */
+    @media (max-width: 450px) {
+      .nav-inner { gap: 0; justify-content: space-between; padding: 0 4px; }
+      .tab-btn { padding: 12px 6px; font-size: 0.72rem; gap: 4px; flex: 1; justify-content: center; }
+      .tab-btn .icon { width: 17px; height: 17px; }
       #miniRate { display: none; }
     }
+
+    /* Stili Video */
+    .yt-thumb-wrap { position: relative; border-radius: var(--radius-sm); overflow: hidden; cursor: pointer; aspect-ratio: 16/9; background: #000; margin-bottom: 8px; }
+    .yt-thumb { width: 100%; height: 100%; object-fit: cover; opacity: 0.85; transition: opacity 0.2s; }
+    .yt-thumb-wrap:hover .yt-thumb { opacity: 1; }
+    .yt-play-btn { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 48px; height: 48px; background: rgba(28,27,25,0.7); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
+    .yt-thumb-wrap:hover .yt-play-btn { background: var(--accent); }
 
     @media (min-width: 760px) {
       .mini-inner { padding: 10px 32px 14px; gap: 9px; }
@@ -818,6 +823,7 @@
       <button class="tab-btn" data-tab="setlistTab"><span data-icon="scaletta"></span>Scaletta</button>
       <button class="tab-btn" data-tab="archiveTab"><span data-icon="spartiti"></span>Spartiti</button>
       <button class="tab-btn" data-tab="audioTab"><span data-icon="audio"></span>Audio</button>
+      <button class="tab-btn" data-tab="videoTab"><span data-icon="video"></span>Video</button>
     </div>
   </div>
 
@@ -901,6 +907,19 @@
     <div class="grid" id="audioList"><div class="empty-state">Caricamento…</div></div>
   </section>
 
+  <!-- VIDEO -->
+  <section id="videoTab" class="view-panel">
+    <div class="liturgy-head">
+      <h2 class="liturgy-title">Video</h2>
+      <div class="liturgy-tools">
+        <button class="btn btn-primary admin-only" id="addVideoBtn">
+          <span data-icon="piu"></span>Aggiungi
+        </button>
+      </div>
+    </div>
+    <div class="grid" id="videoList"><div class="empty-state">Caricamento…</div></div>
+  </section>
+
   <div id="pdfViewer" hidden role="dialog" aria-modal="true" aria-label="Spartito">
     <div class="pdf-shell">
       <div class="pdf-bar">
@@ -940,6 +959,31 @@
     </div>
   </div>
 
+  <!-- MODULO VIDEO (solo admin) -->
+  <div id="videoModal" hidden role="dialog" aria-modal="true" aria-label="Video">
+    <div class="cal-form">
+      <h3>Nuovo Video</h3>
+      <label>Titolo<input type="text" id="vidFTitolo"></label>
+      <label>Link YouTube<input type="text" id="vidFLink" placeholder="Es. https://youtu.be/..."></label>
+      <label>Data Registrazione<input type="date" id="vidFData"></label>
+      <div class="cal-form-actions">
+        <button class="btn btn-quiet" id="vidFCancel">Annulla</button>
+        <button class="btn btn-primary" id="vidFSave">Salva</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LETTORE VIDEO YOUTUBE A SCHERMO INTERO -->
+  <div id="ytPlayerModal" hidden role="dialog" aria-modal="true" style="position:fixed;inset:0;z-index:600;background:#1C1B19;display:flex;flex-direction:column;">
+    <div class="pdf-shell">
+      <div class="pdf-bar">
+        <button id="ytClose" aria-label="Chiudi"><span data-icon="chiudi"></span></button>
+        <div class="pdf-bar-title">Lettore Video</div>
+      </div>
+      <iframe id="ytIframe" style="flex:1;width:100%;border:none;background:#000;" allowfullscreen allow="autoplay"></iframe>
+    </div>
+  </div>
+
   <!-- BARRA DEL LETTORE — compare quando parte una registrazione -->
   <div id="miniPlayer" hidden aria-label="Lettore">
     <div class="mini-inner">
@@ -976,22 +1020,6 @@
 
   /* ==========================================================
      CHIAVE API DI GOOGLE DRIVE — incollala qui fra le virgolette.
-
-     Serve per far arrivare file e registrazioni direttamente dai
-     server di Google al browser, senza passare da nessuna parte.
-     È la differenza fra sentire l'audio partire subito e aspettare.
-
-     Senza chiave il sito funziona lo stesso, ma le registrazioni
-     oltre i 25 MB devono passare dal server ed è più lento.
-
-     Come ottenerla (gratuita, cinque minuti, una volta sola):
-       1. console.cloud.google.com → crea un progetto
-       2. API e servizi → Libreria → cerca "Google Drive API" → Abilita
-       3. API e servizi → Credenziali → Crea credenziali → Chiave API
-       4. Limita la chiave: applicazioni web (referrer HTTP) → il
-          dominio del sito;  restrizioni API → solo Google Drive API
-     Così limitata la chiave può leggere soltanto i file già pubblici,
-     e solo dal tuo sito: non c'è nulla da nascondere.
      ========================================================== */
   const DRIVE_API_KEY = "";
   /* ========================================================== */
@@ -1006,7 +1034,7 @@
   const AUDIO_TAGS = ["Tutti", "Messa", "Prove", "Audio_guida"];
   const GIORNI_NOVITA = 14;
 
-  let appData = { songs: [], audios: [], setlist: [], calendar: [], momenti: [], liturgyTitle: "", choirName: "", logoUrl: "" };
+  let appData = { songs: [], audios: [], videos: [], setlist: [], calendar: [], momenti: [], liturgyTitle: "", choirName: "", logoUrl: "" };
   let activeTag = "Tutti";
   let activeAudioTag = "Tutti";
   let adminToken = sessionStorage.getItem('coroAdminPwd') || "";
@@ -1024,6 +1052,7 @@
     matita:   '<path d="m4 20 4.2-1L18.3 8.9a1.6 1.6 0 0 0 0-2.3l-.9-.9a1.6 1.6 0 0 0-2.3 0L5 15.8z"/><path d="m13.6 7.2 3.2 3.2"/>',
     spartiti: '<path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4"/><path d="M10.5 17.2a1.6 1.6 0 1 0 3.2 0V11l2.3-.8"/>',
     audio:    '<path d="M4 10.5v3M8 7.5v9M12 4.5v15M16 8.5v7M20 11v2"/>',
+    video:    '<path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>',
     apri:     '<path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4"/><path d="M9.5 13h5M9.5 17h3.5"/>',
     scarica:  '<path d="M12 4v11"/><path d="m7.6 10.6 4.4 4.4 4.4-4.4"/><path d="M5 19.5h14"/>',
     chiudi:   '<path d="m6 6 12 12M18 6 6 18"/>',
@@ -1126,6 +1155,7 @@
     renderTagFilters();
     applyFilters();
     applyAudioFilters();
+    renderVideoList();
   }
 
   /* ---------- Avvisi di aggiornamento ---------- */
@@ -2139,6 +2169,75 @@
     if (confirm('Rimuovere il canto da "' + momento + '"?')) run('remove', { momento });
   }
 
+  /* ---------- Video ---------- */
+  function renderVideoList() {
+    const container = document.getElementById('videoList');
+    container.innerHTML = '';
+    
+    if (!appData.videos || !appData.videos.length) {
+      container.innerHTML = '<div class="empty-state">Nessun video disponibile in archivio.</div>';
+      return;
+    }
+    
+    appData.videos.forEach(v => {
+      const card = document.createElement('article');
+      card.className = 'card';
+      card.innerHTML = 
+        '<div class="yt-thumb-wrap" data-id="' + v.ytId + '">' +
+          '<img src="https://img.youtube.com/vi/' + v.ytId + '/hqdefault.jpg" class="yt-thumb" loading="lazy">' +
+          '<div class="yt-play-btn">' + icon('play', 24) + '</div>' +
+        '</div>' +
+        '<h3 class="card-title">' + esc(v.title) + '</h3>' +
+        '<div class="tags"><span class="tag tag-date">' + esc(v.date) + '</span></div>' +
+        '<div class="card-actions">' +
+          '<a href="https://www.youtube.com/watch?v=' + v.ytId + '" target="_blank" rel="noopener" class="btn">' +
+            icon('esterno') + 'Apri su YouTube</a>' +
+        '</div>';
+      
+      card.querySelector('.yt-thumb-wrap').addEventListener('click', () => openYtPlayer(v.ytId));
+      container.appendChild(card);
+    });
+  }
+
+  function openYtPlayer(id) {
+    document.getElementById('ytIframe').src = 'https://www.youtube.com/embed/' + id + '?autoplay=1&rel=0';
+    document.getElementById('ytPlayerModal').hidden = false;
+    document.body.classList.add('viewer-open');
+  }
+
+  function closeYtPlayer() {
+    document.getElementById('ytPlayerModal').hidden = true;
+    document.getElementById('ytIframe').src = '';
+    document.body.classList.remove('viewer-open');
+  }
+
+  function openVideoForm() {
+    document.getElementById('vidFTitolo').value = '';
+    document.getElementById('vidFLink').value = '';
+    document.getElementById('vidFData').value = dayKey(new Date());
+    document.getElementById('videoModal').hidden = false;
+    document.body.classList.add('viewer-open');
+  }
+
+  function closeVideoForm() {
+    document.getElementById('videoModal').hidden = true;
+    document.body.classList.remove('viewer-open');
+  }
+
+  async function saveVideoForm() {
+    const p = {
+      titolo: document.getElementById('vidFTitolo').value.trim(),
+      link: document.getElementById('vidFLink').value.trim(),
+      data: document.getElementById('vidFData').value
+    };
+    if (!p.titolo || !p.link || !p.data) { toast('Compila tutti i campi', 'error'); return; }
+    const btn = document.getElementById('vidFSave');
+    btn.disabled = true; btn.textContent = 'Salvo…';
+    await run('addVideo', p, 'Video aggiunto');
+    btn.disabled = false; btn.textContent = 'Salva';
+    closeVideoForm();
+  }
+
   /* ---------- Avvio ---------- */
   paintIcons();
 
@@ -2150,9 +2249,6 @@
   document.getElementById('pdfClose').addEventListener('click', closePdf);
   document.getElementById('pdfViewer').addEventListener('click', e => {
     if (e.target.id === 'pdfViewer') closePdf();
-  });
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape' && !document.getElementById('pdfViewer').hidden) closePdf();
   });
 
   document.getElementById('editTitleBtn').addEventListener('click', () => {
@@ -2673,7 +2769,13 @@
     setTimeout(() => w.print(), 500);
   }
 
-  /* ---------- Collegamenti del calendario ---------- */
+  /* ---------- Collegamenti dei pulsanti ---------- */
+  document.getElementById('ytClose').addEventListener('click', closeYtPlayer);
+  document.getElementById('addVideoBtn').addEventListener('click', openVideoForm);
+  document.getElementById('vidFCancel').addEventListener('click', closeVideoForm);
+  document.getElementById('vidFSave').addEventListener('click', saveVideoForm);
+  document.getElementById('videoModal').addEventListener('click', e => { if (e.target.id === 'videoModal') closeVideoForm(); });
+
   document.getElementById('calPrev').addEventListener('click', () => calGoto(-1));
   document.getElementById('calNext').addEventListener('click', () => calGoto(1));
   document.getElementById('calMonthTitle').addEventListener('click', () => {
@@ -2686,8 +2788,15 @@
   document.getElementById('calFCancel').addEventListener('click', closeCalForm);
   document.getElementById('calFSave').addEventListener('click', saveCalForm);
   document.getElementById('calModal').addEventListener('click', e => { if (e.target.id === 'calModal') closeCalForm(); });
+
+  /* Tasto Escape raggruppato in chiusura di ogni finestra */
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape' && !document.getElementById('calModal').hidden) closeCalForm();
+    if (e.key === 'Escape') {
+      if (!document.getElementById('pdfViewer').hidden) closePdf();
+      if (!document.getElementById('calModal').hidden) closeCalForm();
+      if (document.getElementById('videoModal') && !document.getElementById('videoModal').hidden) closeVideoForm();
+      if (document.getElementById('ytPlayerModal') && !document.getElementById('ytPlayerModal').hidden) closeYtPlayer();
+    }
   });
 
   renderAudioTagFilters();
