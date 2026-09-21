@@ -683,6 +683,7 @@
       margin: 18px 0 8px; padding-left: 32px;
     }
     .ev-day-head:first-child { margin-top: 0; }
+    .ev-past-head { font-size: 0.72rem; letter-spacing: .14em; text-transform: uppercase; opacity: .7; margin-top: 28px; }
 
     #calModal, #videoModal {
       position: fixed; inset: 0; z-index: 450;
@@ -2523,10 +2524,22 @@
     }
 
     const oggi = oggiKey();
+    // Prima gli appuntamenti in arrivo (dal più vicino), poi quelli già
+    // passati (dal più recente), separati da un'intestazione.
+    const futuri = evs.filter(ev => evDay(ev) >= oggi);
+    const passati = evs.filter(ev => evDay(ev) < oggi).reverse();
+    const ordinati = futuri.concat(passati);
+
     let ultimoGiorno = '';
-    evs.forEach(ev => {
+    ordinati.forEach((ev, i) => {
       const d = parseIt(ev.date);
       const k = dayKey(d);
+      if (k < oggi && i === futuri.length) {
+        const sep = document.createElement('li');
+        sep.className = 'ev-day-head ev-past-head';
+        sep.textContent = 'Già passati';
+        list.appendChild(sep);
+      }
       if (k !== ultimoGiorno) {
         ultimoGiorno = k;
         const h = document.createElement('li');
