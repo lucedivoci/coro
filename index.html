@@ -2406,6 +2406,13 @@
     setTimeout(() => URL.revokeObjectURL(url), 10000);
   }
 
+  /** Aggiunge al calendario del telefono un singolo appuntamento qualsiasi. */
+  function aggiungiEventoAlCalendario(ev) {
+    const d = parseIt(ev.date);
+    const nome = (tipoKey(ev.tipo) || 'appuntamento') + '_' + (d ? dayKey(d) : 'data') + '.ics';
+    scaricaIcs([ev], nome.charAt(0).toUpperCase() + nome.slice(1));
+  }
+
   function aggiungiProssimoAlCalendario() {
     const nx = prossimoEvento();
     if (!nx) { toast('Nessun appuntamento in programma'); return; }
@@ -2539,11 +2546,19 @@
           '<h3 class="stop-title">' + (ev.ora ? 'Ore ' + esc(ev.ora) : esc(ev.tipo)) +
             (ev.luogo ? '<span style="font-weight:400"> · ' + esc(ev.luogo) + '</span>' : '') + '</h3>' +
           (ev.note ? '<div class="ev-note">' + esc(ev.note) + '</div>' : '') +
+          // Bottone per tutti: solo per appuntamenti futuri e non annullati
+          (k >= oggi && !ev.annullato
+            ? '<div class="stop-actions" style="margin-top:10px">' +
+                '<button class="btn btn-quiet js-add-cal">' + icon('calpiu') + 'Aggiungi al calendario</button>' +
+              '</div>'
+            : '') +
           '<div class="stop-actions admin-box" style="border-top:0;padding-top:0;margin-top:12px">' +
             '<button class="btn btn-quiet js-edit">' + icon('matita') + 'Modifica</button>' +
             '<button class="btn btn-danger js-del" aria-label="Elimina">' + icon('rimuovi') + '</button>' +
           '</div>' +
         '</div>';
+      const addBtn = li.querySelector('.js-add-cal');
+      if (addBtn) addBtn.addEventListener('click', () => aggiungiEventoAlCalendario(ev));
       li.querySelector('.js-edit').addEventListener('click', () => openCalForm(ev));
       li.querySelector('.js-del').addEventListener('click', () => {
         if (confirm('Eliminare l\'appuntamento del ' + ev.date + '?')) run('calDelete', { id: ev.id });
